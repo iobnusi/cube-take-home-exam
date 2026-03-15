@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS sales (
+  id                  SERIAL PRIMARY KEY,
+  period              DATE            NOT NULL,
+  region              TEXT            NOT NULL,
+  platform            TEXT            NOT NULL,
+  shop_id             TEXT            NOT NULL,
+  is_mall             BOOLEAN         NOT NULL DEFAULT false,
+  product_id          TEXT            NOT NULL,
+  sku_id              TEXT,
+  origin              TEXT,
+  status              TEXT,
+  l1_category         TEXT,
+  l2_category         TEXT,
+  l3_category         TEXT,
+  l4_category         TEXT,
+  nmv                 NUMERIC(14, 2)  NOT NULL DEFAULT 0,
+  units_sold          INTEGER         NOT NULL DEFAULT 0,
+  avg_price_per_unit  NUMERIC(14, 2)  NOT NULL DEFAULT 0,
+  created_at          TIMESTAMPTZ     NOT NULL DEFAULT now()
+);
