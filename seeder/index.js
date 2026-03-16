@@ -1,16 +1,3 @@
-// seeder file
-
-// to iterate through all xslx files in the data folder and
-// batch rows into chunks of 500
-// clean up the data
-// generate sql insert statement with the data
-// use pg to execute the insert statement
-// iterate through all chunks and execute the insert statement
-// skip and log the data if insert statement fails
-
-// using node-xlsx to read the xslx files
-// using pg to execute the insert statement
-
 import fs from "node:fs/promises";
 import xlsx from "node-xlsx";
 import pg from "pg";
