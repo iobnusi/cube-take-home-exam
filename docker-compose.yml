@@ -1,4 +1,3 @@
-# docker-compose.yml
 version: "3.9"
 
 services:
@@ -33,5 +32,19 @@ services:
                 "postgres://app:secret@db:5432/marketplace?sslmode=disable",
                 "up",
             ]
+    seeder:
+        environment:
+            DATABASE_URL: postgres://app:secret@db:5432/marketplace?sslmode=disable
+        build:
+            context: seeder
+            dockerfile: Dockerfile
+        depends_on:
+            db:
+                condition: service_healthy
+            migrate:
+                condition: service_completed_successfully
+        volumes:
+            - ./seeder/data/:/app/data
+        command: ["node", "index.js"]
 volumes:
     pgdata:
