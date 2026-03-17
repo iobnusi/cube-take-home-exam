@@ -7,6 +7,7 @@
         "specVersion": 3
     },
     "routes": {
+        "iocModule": "src/ioc.ts",
         "routesDir": "src/generated",
         "esm": true
     }

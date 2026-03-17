@@ -1,6 +1,6 @@
 import express, { type Request, type Response } from "express";
 import cors from "cors";
-import { RegisterRoutes } from "./generated/routes.js";
+import { RegisterRoutes } from "./generated/routes";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "../public/swagger.json" assert { type: "json" };
 
