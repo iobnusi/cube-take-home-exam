@@ -23,6 +23,19 @@ export default tseslint.config(
         ],
     },
     {
+        rules: {
+            "@typescript-eslint/restrict-template-expressions": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                {
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                    caughtErrorsIgnorePattern: "^_",
+                },
+            ],
+        },
+    },
+    {
         files: ["src/generated/**"],
         rules: {
             "@typescript-eslint/no-unsafe-assignment": "off",

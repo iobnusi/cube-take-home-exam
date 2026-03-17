@@ -1,6 +1,6 @@
 # Feature Specification
 
-Marketplace analytics dashboard for oral care product sales data (Jan–Mar 2025, daily granularity).
+Marketplace analytics dashboard for oral care product sales data (Jan–Mar 2025, monthly granularity).
 
 ## Stack
 
@@ -12,14 +12,14 @@ Marketplace analytics dashboard for oral care product sales data (Jan–Mar 2025
 
 ## Data Source
 
-Single `sales` table with daily marketplace records.
+Single `sales` table with monthly marketplace records.
 
 ### Schema
 
 | Column             | Type           | Nullable | Notes                          |
 | ------------------ | -------------- | -------- | ------------------------------ |
 | id                 | SERIAL PK      | no       | Auto-increment                 |
-| period             | DATE           | no       | Daily granularity, Jan–Mar 2025 |
+| period             | DATE           | no       | Monthly granularity, Jan–Mar 2025 |
 | region             | TEXT           | no       |                                |
 | platform           | TEXT           | no       |                                |
 | shop_id            | TEXT           | no       |                                |
@@ -80,25 +80,19 @@ When a grouping dimension is selected, the card expands into a breakdown (e.g., 
 
 ---
 
-### 2. Trends — Time Series Graphs
+### 2. Trends — Monthly Bar Charts
 
-Line or area charts showing metrics over time. The user can toggle between **daily**, **weekly**, and **monthly** aggregation.
+Bar charts comparing metrics across 3 months (Jan, Feb, Mar 2025). Fixed monthly aggregation via `GROUP BY DATE_TRUNC('month', period)`.
 
-| Chart                  | Y-Axis                                    | Filterable By                |
-| ---------------------- | ----------------------------------------- | ---------------------------- |
-| NMV Over Time          | `SUM(nmv)`                                | platform, region, category   |
-| Units Sold Over Time   | `SUM(units_sold)`                         | platform, region, category   |
-| Avg Price Over Time    | `SUM(nmv) / NULLIF(SUM(units_sold), 0)`  | platform, region, category   |
+| Chart                  | Y-Axis                                    | Filterable By              |
+| ---------------------- | ----------------------------------------- | -------------------------- |
+| NMV by Month           | `SUM(nmv)`                                | platform, region, category |
+| Units Sold by Month    | `SUM(units_sold)`                         | platform, region, category |
+| Avg Price by Month     | `SUM(nmv) / NULLIF(SUM(units_sold), 0)`  | platform, region, category |
 
-**Time aggregation** (applies to all charts on this page):
+Each chart supports an optional **group_by** dimension (platform, region, or category). When set, the chart renders as a **grouped bar chart** with one bar per dimension value within each month. When no grouping is applied, it renders as a simple 3-bar chart.
 
-| Granularity | SQL                              | Expected Points |
-| ----------- | -------------------------------- | --------------- |
-| Daily       | `GROUP BY period`                | ~90             |
-| Weekly      | `GROUP BY DATE_TRUNC('week', period)`  | ~13       |
-| Monthly     | `GROUP BY DATE_TRUNC('month', period)` | 3          |
-
-When a filter dimension is applied, the chart shows one series per distinct value within that dimension.
+MoM (month-over-month) % change annotations are shown on the Feb and Mar bars relative to the prior month.
 
 ---
 
@@ -165,7 +159,7 @@ Each page maps roughly to one or more backend endpoints. Suggested REST structur
 | Endpoint                    | Purpose                                  | Page     |
 | --------------------------- | ---------------------------------------- | -------- |
 | `GET /api/summary`          | KPI card aggregates with optional groupBy | Home     |
-| `GET /api/trends`           | Time-series data with granularity param   | Trends   |
+| `GET /api/trends`           | Monthly bar chart data with optional group_by | Trends   |
 | `GET /api/top/products`     | Top 10 products with ranking metric param | Rankings |
 | `GET /api/top/shops`        | Top 10 shops with ranking metric param    | Rankings |
 | `GET /api/records`          | Paginated, filtered, sorted row listing   | Records  |
