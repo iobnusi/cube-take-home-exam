@@ -1,9 +1,10 @@
-import { Controller, Get, Query, Route } from "tsoa";
+import { Controller, Get, Query, Route, Tags } from "tsoa";
 import type { GetRecordsResponse } from "../models/records";
 import type { RecordService } from "../services/RecordService";
 import type { IsMall } from "../models/query";
 
 @Route("/records")
+@Tags("Records")
 export class RecordController extends Controller {
     constructor(private recordService: RecordService) {
         super();
