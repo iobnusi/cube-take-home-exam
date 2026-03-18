@@ -38,13 +38,14 @@ Single `sales` table with monthly marketplace records.
 
 ### Key Measures
 
-| Measure            | Derivation                                |
-| ------------------ | ----------------------------------------- |
-| Total NMV          | `SUM(nmv)`                                |
-| Total Units Sold   | `SUM(units_sold)`                         |
-| Avg Price Per Unit | `SUM(nmv) / NULLIF(SUM(units_sold), 0)`  |
-| Unique Products    | `COUNT(DISTINCT product_id)`              |
-| Unique Shops       | `COUNT(DISTINCT shop_id)`                 |
+| Measure            | Derivation                                                          |
+| ------------------ | ------------------------------------------------------------------- |
+| Total NMV          | `SUM(nmv)`                                                          |
+| Total Units Sold   | `SUM(units_sold)`                                                   |
+| Avg Price Per Unit | `SUM(nmv) / NULLIF(SUM(units_sold), 0)`                            |
+| Unique Products    | `COUNT(DISTINCT product_id)`                                        |
+| Unique Shops       | `COUNT(DISTINCT shop_id)`                                           |
+| NMV Per Shop       | `SUM(nmv) / NULLIF(COUNT(DISTINCT shop_id), 0)`                    |
 
 ### Dimensions
 
@@ -82,17 +83,20 @@ When a grouping dimension is selected, the card expands into a breakdown (e.g., 
 
 ### 2. Trends — Monthly Bar Charts
 
-Bar charts comparing metrics across 3 months (Jan, Feb, Mar 2025). Fixed monthly aggregation via `GROUP BY DATE_TRUNC('month', period)`.
+Bar charts comparing metrics across 3 months (Jan, Feb, Mar 2025). Fixed monthly aggregation via `GROUP BY DATE_TRUNC('month', period)`. Six charts arranged in a 2×3 or 3×2 grid.
 
-| Chart                  | Y-Axis                                    | Filterable By              |
-| ---------------------- | ----------------------------------------- | -------------------------- |
-| NMV by Month           | `SUM(nmv)`                                | platform, region, category |
-| Units Sold by Month    | `SUM(units_sold)`                         | platform, region, category |
-| Avg Price by Month     | `SUM(nmv) / NULLIF(SUM(units_sold), 0)`  | platform, region, category |
+| Chart                  | Category           | Y-Axis                                                          | Filterable By              |
+| ---------------------- | ------------------ | --------------------------------------------------------------- | -------------------------- |
+| Total NMV              | Revenue & Volume   | `SUM(nmv)`                                                      | platform, region, category |
+| Units Sold             | Revenue & Volume   | `SUM(units_sold)`                                               | platform, region, category |
+| Avg Price Per Unit     | Pricing            | `SUM(nmv) / NULLIF(SUM(units_sold), 0)`                        | platform, region, category |
+| NMV Per Shop           | Ecosystem Health   | `SUM(nmv) / NULLIF(COUNT(DISTINCT shop_id), 0)`                | platform, region, category |
+| Active Products        | Ecosystem Health   | `COUNT(DISTINCT product_id)`                                    | platform, region, category |
+| Active Shops           | Ecosystem Health   | `COUNT(DISTINCT shop_id)`                                       | platform, region, category |
 
-Each chart supports an optional **group_by** dimension (platform, region, or category). When set, the chart renders as a **grouped bar chart** with one bar per dimension value within each month. When no grouping is applied, it renders as a simple 3-bar chart.
+Each chart supports an optional **group_by** dimension (`platform`, `region`, or `l1_category`). When set, the chart renders as a **grouped bar chart** with one bar per dimension value within each month. When no grouping is applied, it renders as a simple 3-bar chart.
 
-MoM (month-over-month) % change annotations are shown on the Feb and Mar bars relative to the prior month.
+MoM (month-over-month) % change annotations are shown on the Feb and Mar bars relative to the prior month. MoM is computed on the frontend from the response data.
 
 ---
 

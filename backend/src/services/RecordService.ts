@@ -1,7 +1,7 @@
 import type { Pool } from "pg";
 import type { GetRecordsParams } from "../models/records";
 import { buildPagination, buildWhere } from "../db/queryBuilder";
-import type { Record } from "../models/records";
+import type { SalesRecord } from "../models/records";
 import type { PaginatedResponse } from "../models/query";
 
 export class RecordService {
@@ -9,14 +9,14 @@ export class RecordService {
 
     public async get(
         params: GetRecordsParams
-    ): Promise<PaginatedResponse<Record>> {
+    ): Promise<PaginatedResponse<SalesRecord>> {
         const { sql: whereSql, params: whereParams } = buildWhere(
             params.filters
         );
         const { sql: paginationSql, params: paginationParams } =
             buildPagination(params.page, params.limit, whereParams.length);
 
-        const result = await this.db.query<Record & { total: string }>(
+        const result = await this.db.query<SalesRecord & { total: string }>(
             `
               SELECT *, COUNT(*) OVER () AS total FROM sales
               ${whereSql}
@@ -27,7 +27,9 @@ export class RecordService {
         );
 
         const total = Number(result.rows[0]?.total ?? 0);
-        const data = result.rows.map(({ total: _, ...row }) => row as Record);
+        const data = result.rows.map(
+            ({ total: _, ...row }) => row as SalesRecord
+        );
 
         return {
             data,

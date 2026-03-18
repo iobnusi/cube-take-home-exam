@@ -64,7 +64,13 @@ export class SummaryService {
             }
 
             queries.push(
-                `SELECT ${params.group_by} AS "group", ${aggregate} AS total FROM sales ${whereSql} GROUP BY ${params.group_by} ORDER BY total DESC`
+                `SELECT
+                    ${params.group_by} AS "group",
+                    ${aggregate} AS total 
+                FROM sales
+                ${whereSql} 
+                GROUP BY ${params.group_by} 
+                ORDER BY total DESC`
             );
         }
 

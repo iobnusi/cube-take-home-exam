@@ -33,6 +33,7 @@ export default tseslint.config(
                     caughtErrorsIgnorePattern: "^_",
                 },
             ],
+            "@typescript-eslint/no-redundant-type-constituents": "off",
         },
     },
     {

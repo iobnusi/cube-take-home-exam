@@ -1,6 +1,6 @@
 import type { FilterParams, PaginatedResponse } from "./query";
 
-export interface Record {
+export interface SalesRecord {
     id: number;
     created_at: string;
     period: string;
@@ -26,4 +26,4 @@ export interface GetRecordsParams {
     limit: number;
 }
 
-export type GetRecordsResponse = PaginatedResponse<Record>;
+export type GetRecordsResponse = PaginatedResponse<SalesRecord>;
