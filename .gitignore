@@ -2,6 +2,7 @@
 node_modules
 .next
 dist
+.cursor
 
 # tsoa generated files
 backend/src/generated/
