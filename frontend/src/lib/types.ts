@@ -76,9 +76,17 @@ export interface PaginatedResponse<T> {
 
 export type GetRecordsResponse = PaginatedResponse<SalesRecord>;
 
+export type IsMall = "true" | "false" | "other";
+
 export interface FilterParams {
   platform?: string;
   region?: string;
   from?: string;
   to?: string;
+  l1_category?: string;
+  l2_category?: string;
+  l3_category?: string;
+  l4_category?: string;
+  origin?: string;
+  is_mall?: IsMall;
 }

@@ -59,7 +59,17 @@ export default function TrendChart() {
         setError(e instanceof Error ? e.message : "Failed to load")
       )
       .finally(() => setLoading(false));
-  }, [filters.platform, filters.region, groupBy]);
+  }, [
+    filters.platform,
+    filters.region,
+    filters.l1_category,
+    filters.l2_category,
+    filters.l3_category,
+    filters.l4_category,
+    filters.origin,
+    filters.is_mall,
+    groupBy,
+  ]);
 
   const { chartData, groups } = useMemo(() => {
     if (!trendData) return { chartData: [], groups: [] };

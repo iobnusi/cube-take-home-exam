@@ -139,7 +139,19 @@ export default function SalesTable() {
         setError(e instanceof Error ? e.message : "Failed to load")
       )
       .finally(() => setLoading(false));
-  }, [filters.platform, filters.region, filters.from, filters.to, currentPage]);
+  }, [
+    filters.platform, 
+    filters.region, 
+    filters.from, 
+    filters.to, 
+    filters.is_mall, 
+    filters.origin, 
+    filters.l1_category, 
+    filters.l2_category, 
+    filters.l3_category, 
+    filters.l4_category, 
+    currentPage
+  ]);
 
   const tableData = useMemo(() => result?.data ?? [], [result]);
 

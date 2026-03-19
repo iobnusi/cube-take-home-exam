@@ -101,7 +101,18 @@ export default function KpiCards() {
       .then(setData)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
-  }, [filters.platform, filters.region, filters.from, filters.to]);
+  }, [
+    filters.platform,
+    filters.region,
+    filters.from,
+    filters.to,
+    filters.l1_category,
+    filters.l2_category,
+    filters.l3_category,
+    filters.l4_category,
+    filters.origin,
+    filters.is_mall,
+  ]);
 
   if (error) {
     return (

@@ -6,11 +6,14 @@ import { SummaryController } from "./controllers/SummaryController";
 import { SummaryService } from "./services/SummaryService";
 import { TrendController } from "./controllers/TrendController";
 import { TrendService } from "./services/TrendService";
+import { FiltersController } from "./controllers/FiltersController";
+import { FiltersService } from "./services/FiltersService";
 
 const controllers = new Map<unknown, unknown>([
     [RecordController, new RecordController(new RecordService(pool))],
     [SummaryController, new SummaryController(new SummaryService(pool))],
     [TrendController, new TrendController(new TrendService(pool))],
+    [FiltersController, new FiltersController(new FiltersService(pool))],
 ]);
 
 export const iocContainer: IocContainer = {
