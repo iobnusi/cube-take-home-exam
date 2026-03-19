@@ -3,6 +3,7 @@ node_modules
 .next
 dist
 .cursor
+.vscode
 
 # tsoa generated files
 backend/src/generated/

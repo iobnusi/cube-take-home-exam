@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,7 +10,6 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { useFilters } from "@/lib/useFilters";
-import { fetchRecords } from "@/lib/api";
 import type { SalesRecord, GetRecordsResponse } from "@/lib/types";
 
 const PAGE_SIZE = 20;
@@ -121,37 +120,10 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
   );
 }
 
-export default function SalesTable() {
-  const { filters, setFilter } = useFilters();
-  const currentPage = filters.page ?? 1;
+export default function SalesTable({ data: result}: { data: GetRecordsResponse }) {
+  const { setFilter } = useFilters();
 
-  const [result, setResult] = useState<GetRecordsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    fetchRecords(filters, currentPage, PAGE_SIZE)
-      .then(setResult)
-      .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : "Failed to load")
-      )
-      .finally(() => setLoading(false));
-  }, [
-    filters.platform, 
-    filters.region, 
-    filters.from, 
-    filters.to, 
-    filters.is_mall, 
-    filters.origin, 
-    filters.l1_category, 
-    filters.l2_category, 
-    filters.l3_category, 
-    filters.l4_category, 
-    currentPage
-  ]);
 
   const tableData = useMemo(() => result?.data ?? [], [result]);
 
@@ -179,7 +151,7 @@ export default function SalesTable() {
         </div>
         {result && (
           <span className="text-xs text-slate-400">
-            Page {currentPage} of {totalPages}
+            Page {result.page} of {totalPages}
           </span>
         )}
       </div>
@@ -210,23 +182,7 @@ export default function SalesTable() {
             ))}
           </thead>
           <tbody>
-            {loading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <tr key={i} className="border-b border-slate-50 animate-pulse">
-                  {ALL_COLUMNS.map((_, j) => (
-                    <td key={j} className="px-3 py-2.5">
-                      <div className="h-3 bg-slate-100 rounded w-full max-w-24" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : error ? (
-              <tr>
-                <td colSpan={ALL_COLUMNS.length} className="px-5 py-12 text-center text-sm text-red-500">
-                  {error}
-                </td>
-              </tr>
-            ) : table.getRowModel().rows.length === 0 ? (
+            { table.getRowModel().rows.length === 0 ? (
               <tr>
                 <td colSpan={ALL_COLUMNS.length} className="px-5 py-12 text-center text-sm text-slate-400">
                   No records found
@@ -253,8 +209,8 @@ export default function SalesTable() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
           <button
-            onClick={() => setFilter("page", Math.max(1, currentPage - 1))}
-            disabled={currentPage <= 1}
+            onClick={() => setFilter("page", Math.max(1, result.page - 1))}
+            disabled={result.page <= 1}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -268,14 +224,14 @@ export default function SalesTable() {
               let page: number;
               if (totalPages <= 7) {
                 page = i + 1;
-              } else if (currentPage <= 4) {
+              } else if (result.page <= 4) {
                 page = i + 1;
-              } else if (currentPage >= totalPages - 3) {
+              } else if (result.page >= totalPages - 3) {
                 page = totalPages - 6 + i;
               } else {
-                page = currentPage - 3 + i;
+                page = result.page - 3 + i;
               }
-              const isActive = page === currentPage;
+              const isActive = page === result.page;
               return (
                 <button
                   key={page}
@@ -293,8 +249,8 @@ export default function SalesTable() {
           </div>
 
           <button
-            onClick={() => setFilter("page", Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage >= totalPages}
+              onClick={() => setFilter("page", Math.min(totalPages, result.page + 1))}
+            disabled={result.page >= totalPages}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next
