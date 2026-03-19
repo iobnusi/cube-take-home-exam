@@ -2,6 +2,7 @@ import { Controller, Get, Query, Route, Tags } from "tsoa";
 import type { GetRecordsResponse } from "../models/records";
 import type { RecordService } from "../services/RecordService";
 import type { IsMall } from "../models/query";
+import type { SortDir } from "../db/queryBuilder";
 
 @Route("/records")
 @Tags("Records")
@@ -23,7 +24,9 @@ export class RecordController extends Controller {
         @Query() l3_category?: string,
         @Query() l4_category?: string,
         @Query() from?: string,
-        @Query() to?: string
+        @Query() to?: string,
+        @Query() sort_by?: string,
+        @Query() sort_dir?: SortDir
     ): Promise<GetRecordsResponse> {
         const safePage = Math.max(1, page);
         const safeLimit = Math.min(100, Math.max(1, limit));
@@ -31,6 +34,8 @@ export class RecordController extends Controller {
         const response = await this.recordService.get({
             page: safePage,
             limit: safeLimit,
+            sort_by,
+            sort_dir,
             filters: {
                 platform,
                 region,

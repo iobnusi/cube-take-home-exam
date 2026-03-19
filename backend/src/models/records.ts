@@ -1,4 +1,5 @@
 import type { FilterParams, PaginatedResponse } from "./query";
+import type { SortDir } from "../db/queryBuilder";
 
 export interface SalesRecord {
     id: number;
@@ -24,6 +25,8 @@ export interface GetRecordsParams {
     filters: FilterParams;
     page: number;
     limit: number;
+    sort_by?: string;
+    sort_dir?: SortDir;
 }
 
 export type GetRecordsResponse = PaginatedResponse<SalesRecord>;

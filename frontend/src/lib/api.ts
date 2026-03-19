@@ -74,7 +74,9 @@ export async function fetchTrends(
 export async function fetchRecords(
     filters: FilterParams,
     page: number,
-    limit: number
+    limit: number,
+    sort_by?: string,
+    sort_dir?: string
 ): Promise<GetRecordsResponse> {
     const qs = buildQuery({
         platform: filters.platform,
@@ -89,6 +91,8 @@ export async function fetchRecords(
         is_mall: filters.is_mall,
         page,
         limit,
+        sort_by,
+        sort_dir,
     });
     const res = await fetch(`${BASE_URL}/records${qs}`, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed to fetch /records");

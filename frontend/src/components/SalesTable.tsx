@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
@@ -169,9 +168,11 @@ export default function SalesTable({
 }: {
   data: GetRecordsResponse;
 }) {
-  const { setFilter } = useFilters();
+  const { filters, setFilter, setFilters } = useFilters();
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const sorting: SortingState = filters.sort_by
+    ? [{ id: filters.sort_by, desc: filters.sort_dir !== 'asc' }]
+    : [];
 
   const tableData = useMemo(() => result?.data ?? [], [result]);
 
@@ -179,10 +180,21 @@ export default function SalesTable({
     data: tableData,
     columns: ALL_COLUMNS,
     state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(sorting) : updater;
+      if (next.length > 0) {
+        setFilters({
+          sort_by: next[0].id,
+          sort_dir: next[0].desc ? 'desc' : 'asc',
+        });
+      } else {
+        setFilters({ sort_by: undefined, sort_dir: undefined });
+      }
+    },
+    manualSorting: true,
     manualPagination: true,
+    getCoreRowModel: getCoreRowModel(),
     pageCount: result ? Math.ceil(result.total / PAGE_SIZE) : -1,
   });
 

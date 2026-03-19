@@ -53,7 +53,13 @@ async function RecordsContent({
 }) {
   const page = Number(params.page) || 1;
 
-  const data = await fetchRecords(filtersFromParams(params), page, PAGE_SIZE);
+  const data = await fetchRecords(
+    filtersFromParams(params),
+    page,
+    PAGE_SIZE,
+    params.sort_by,
+    params.sort_dir,
+  );
 
   return <SalesTable data={data} />;
 }

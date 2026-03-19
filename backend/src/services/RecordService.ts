@@ -1,6 +1,6 @@
 import type { Pool } from "pg";
 import type { GetRecordsParams } from "../models/records";
-import { buildPagination, buildWhere } from "../db/queryBuilder";
+import { buildOrderBy, buildPagination, buildWhere } from "../db/queryBuilder";
 import type { SalesRecord } from "../models/records";
 import type { PaginatedResponse } from "../models/query";
 
@@ -13,6 +13,7 @@ export class RecordService {
         const { sql: whereSql, params: whereParams } = buildWhere(
             params.filters
         );
+        const orderBySql = buildOrderBy(params.sort_by, params.sort_dir);
         const { sql: paginationSql, params: paginationParams } =
             buildPagination(params.page, params.limit, whereParams.length);
 
@@ -20,7 +21,7 @@ export class RecordService {
             `
               SELECT *, COUNT(*) OVER () AS total FROM sales
               ${whereSql}
-              ORDER BY period DESC
+              ${orderBySql}
               ${paginationSql}
             `,
             [...whereParams, ...paginationParams]

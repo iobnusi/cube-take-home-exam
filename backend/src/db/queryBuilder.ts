@@ -66,6 +66,28 @@ export function buildWhere(filters: FilterParams): {
     };
 }
 
+const SORTABLE_COLUMNS = new Set([
+    "period",
+    "platform",
+    "region",
+    "nmv",
+    "units_sold",
+    "avg_price_per_unit",
+]);
+
+export type SortDir = "asc" | "desc";
+
+export function buildOrderBy(
+    sortBy?: string,
+    sortDir?: SortDir
+): string {
+    if (!sortBy || !SORTABLE_COLUMNS.has(sortBy)) {
+        return "ORDER BY period DESC";
+    }
+    const dir = sortDir === "asc" ? "ASC" : "DESC";
+    return `ORDER BY ${sortBy} ${dir}`;
+}
+
 export function buildPagination(
     page: number,
     limit: number,

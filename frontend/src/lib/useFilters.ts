@@ -5,9 +5,13 @@ import { useCallback } from "react";
 import type { FilterParams, IsMall } from "./types";
 import type { TrendGroupBy } from "./types";
 
+export type SortDir = 'asc' | 'desc';
+
 export interface Filters extends FilterParams {
   groupBy?: TrendGroupBy;
   page?: number;
+  sort_by?: string;
+  sort_dir?: SortDir;
 }
 
 export function useFilters(): {
@@ -32,6 +36,8 @@ export function useFilters(): {
     is_mall: (searchParams.get("is_mall") as IsMall) ?? undefined,
     groupBy: (searchParams.get("groupBy") as TrendGroupBy) ?? undefined,
     page: searchParams.get("page") ? Number(searchParams.get("page")) : undefined,
+    sort_by: searchParams.get("sort_by") ?? undefined,
+    sort_dir: (searchParams.get("sort_dir") as SortDir) ?? undefined,
   };
 
   const setFilters = useCallback(
