@@ -12,6 +12,8 @@ export function filtersFromParams(
         l2_category: params.l2_category,
         l3_category: params.l3_category,
         l4_category: params.l4_category,
+        origin: params.origin,
+        is_mall: params.is_mall as FilterParams['is_mall'],
     };
 }
 

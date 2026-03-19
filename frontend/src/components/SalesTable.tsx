@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,11 +8,10 @@ import {
   flexRender,
   createColumnHelper,
   type SortingState,
-} from "@tanstack/react-table";
-import { useFilters } from "@/lib/useFilters";
-import type { SalesRecord, GetRecordsResponse } from "@/lib/types";
-
-const PAGE_SIZE = 20;
+} from '@tanstack/react-table';
+import { useFilters } from '@/lib/useFilters';
+import type { SalesRecord, GetRecordsResponse } from '@/lib/types';
+import { PAGE_SIZE } from '@/lib/constants';
 
 const columnHelper = createColumnHelper<SalesRecord>();
 
@@ -20,7 +19,8 @@ function Badge({ value }: { value: string | null | boolean }) {
   if (value === null || value === undefined) {
     return <span className="text-slate-300">—</span>;
   }
-  const text = typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
+  const text =
+    typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value);
   return (
     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
       {text}
@@ -28,53 +28,77 @@ function Badge({ value }: { value: string | null | boolean }) {
   );
 }
 
-const SORTABLE_COLS = ["period", "platform", "region", "nmv", "units_sold", "avg_price_per_unit"];
+const SORTABLE_COLS = [
+  'period',
+  'platform',
+  'region',
+  'nmv',
+  'units_sold',
+  'avg_price_per_unit',
+];
 
 const ALL_COLUMNS = [
-  columnHelper.accessor("period", {
-    header: "Period",
+  columnHelper.accessor('period', {
+    header: 'Period',
     cell: (i) => i.getValue().slice(0, 7),
     enableSorting: true,
   }),
-  columnHelper.accessor("region", { header: "Region", enableSorting: true }),
-  columnHelper.accessor("platform", { header: "Platform", enableSorting: true }),
-  columnHelper.accessor("shop_id", {
-    header: "Shop ID",
+  columnHelper.accessor('region', { header: 'Region', enableSorting: true }),
+  columnHelper.accessor('platform', {
+    header: 'Platform',
+    enableSorting: true,
+  }),
+  columnHelper.accessor('shop_id', {
+    header: 'Shop ID',
     cell: (i) => (
       <span className="font-mono text-xs text-slate-500">{i.getValue()}</span>
     ),
     enableSorting: false,
   }),
-  columnHelper.accessor("is_mall", {
-    header: "Mall",
+  columnHelper.accessor('is_mall', {
+    header: 'Mall',
     cell: (i) => <Badge value={i.getValue()} />,
     enableSorting: false,
   }),
-  columnHelper.accessor("product_id", {
-    header: "Product ID",
+  columnHelper.accessor('product_id', {
+    header: 'Product ID',
     cell: (i) => (
       <span className="font-mono text-xs text-slate-500">{i.getValue()}</span>
     ),
     enableSorting: false,
   }),
-  columnHelper.accessor("sku_id", {
-    header: "SKU ID",
+  columnHelper.accessor('sku_id', {
+    header: 'SKU ID',
     cell: (i) => (
-      <span className="font-mono text-xs text-slate-400">{i.getValue() ?? "—"}</span>
+      <span className="font-mono text-xs text-slate-400">
+        {i.getValue() ?? '—'}
+      </span>
     ),
     enableSorting: false,
   }),
-  columnHelper.accessor("origin", {
-    header: "Origin",
+  columnHelper.accessor('origin', {
+    header: 'Origin',
     cell: (i) => <Badge value={i.getValue()} />,
     enableSorting: false,
   }),
-  columnHelper.accessor("l1_category", { header: "L1 Cat.", enableSorting: false }),
-  columnHelper.accessor("l2_category", { header: "L2 Cat.", enableSorting: false }),
-  columnHelper.accessor("l3_category", { header: "L3 Cat.", enableSorting: false }),
-  columnHelper.accessor("l4_category", { header: "L4 Cat.", enableSorting: false }),
-  columnHelper.accessor("nmv", {
-    header: "NMV",
+  columnHelper.accessor('l1_category', {
+    header: 'L1 Cat.',
+    enableSorting: false,
+  }),
+  columnHelper.accessor('l2_category', {
+    header: 'L2 Cat.',
+    enableSorting: false,
+  }),
+  columnHelper.accessor('l3_category', {
+    header: 'L3 Cat.',
+    enableSorting: false,
+  }),
+  columnHelper.accessor('l4_category', {
+    header: 'L4 Cat.',
+    enableSorting: false,
+  }),
+  columnHelper.accessor('nmv', {
+    header: 'NMV',
     cell: (i) => {
       const v = Number(i.getValue());
       return (
@@ -85,33 +109,53 @@ const ALL_COLUMNS = [
     },
     enableSorting: true,
   }),
-  columnHelper.accessor("units_sold", {
-    header: "Units",
+  columnHelper.accessor('units_sold', {
+    header: 'Units',
     cell: (i) => (
-      <span className="tabular-nums text-slate-700">{i.getValue().toLocaleString()}</span>
+      <span className="tabular-nums text-slate-700">
+        {i.getValue().toLocaleString()}
+      </span>
     ),
     enableSorting: true,
   }),
-  columnHelper.accessor("avg_price_per_unit", {
-    header: "Avg Price",
+  columnHelper.accessor('avg_price_per_unit', {
+    header: 'Avg Price',
     cell: (i) => (
-      <span className="tabular-nums text-slate-700">${Number(i.getValue()).toFixed(2)}</span>
+      <span className="tabular-nums text-slate-700">
+        ${Number(i.getValue()).toFixed(2)}
+      </span>
     ),
     enableSorting: true,
   }),
 ];
 
-function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
+function SortIcon({ direction }: { direction: false | 'asc' | 'desc' }) {
   if (!direction) {
     return (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-300">
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="text-slate-300"
+      >
         <path d="M7 15l5 5 5-5M7 9l5-5 5 5" />
       </svg>
     );
   }
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-500">
-      {direction === "asc" ? (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      className="text-blue-500"
+    >
+      {direction === 'asc' ? (
         <path d="M12 19V5M5 12l7-7 7 7" />
       ) : (
         <path d="M12 5v14M5 12l7 7 7-7" />
@@ -120,7 +164,11 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
   );
 }
 
-export default function SalesTable({ data: result}: { data: GetRecordsResponse }) {
+export default function SalesTable({
+  data: result,
+}: {
+  data: GetRecordsResponse;
+}) {
   const { setFilter } = useFilters();
 
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -144,9 +192,13 @@ export default function SalesTable({ data: result}: { data: GetRecordsResponse }
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Sales Records</h2>
+          <h2 className="text-sm font-semibold text-slate-900">
+            Sales Records
+          </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            {result ? `${result.total.toLocaleString()} total records` : "Loading..."}
+            {result
+              ? `${result.total.toLocaleString()} total records`
+              : 'Loading...'}
           </p>
         </div>
         {result && (
@@ -166,11 +218,18 @@ export default function SalesTable({ data: result}: { data: GetRecordsResponse }
                   return (
                     <th
                       key={header.id}
-                      className={`px-3 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap ${canSort ? "cursor-pointer select-none hover:text-slate-700" : ""}`}
-                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                      className={`px-3 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap ${canSort ? 'cursor-pointer select-none hover:text-slate-700' : ''}`}
+                      onClick={
+                        canSort
+                          ? header.column.getToggleSortingHandler()
+                          : undefined
+                      }
                     >
                       <div className="flex items-center gap-1.5">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                         {canSort && (
                           <SortIcon direction={header.column.getIsSorted()} />
                         )}
@@ -182,9 +241,12 @@ export default function SalesTable({ data: result}: { data: GetRecordsResponse }
             ))}
           </thead>
           <tbody>
-            { table.getRowModel().rows.length === 0 ? (
+            {table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={ALL_COLUMNS.length} className="px-5 py-12 text-center text-sm text-slate-400">
+                <td
+                  colSpan={ALL_COLUMNS.length}
+                  className="px-5 py-12 text-center text-sm text-slate-400"
+                >
                   No records found
                 </td>
               </tr>
@@ -192,11 +254,17 @@ export default function SalesTable({ data: result}: { data: GetRecordsResponse }
               table.getRowModel().rows.map((row, i) => (
                 <tr
                   key={row.id}
-                  className={`border-b border-slate-50 hover:bg-slate-50/70 transition-colors ${i % 2 === 1 ? "bg-slate-50/30" : ""}`}
+                  className={`border-b border-slate-50 hover:bg-slate-50/70 transition-colors ${i % 2 === 1 ? 'bg-slate-50/30' : ''}`}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-3 py-2.5 text-slate-700 whitespace-nowrap">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <td
+                      key={cell.id}
+                      className="px-3 py-2.5 text-slate-700 whitespace-nowrap"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -209,11 +277,18 @@ export default function SalesTable({ data: result}: { data: GetRecordsResponse }
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
           <button
-            onClick={() => setFilter("page", Math.max(1, result.page - 1))}
+            onClick={() => setFilter('page', Math.max(1, result.page - 1))}
             disabled={result.page <= 1}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <path d="M15 18l-6-6 6-6" />
             </svg>
             Prev
@@ -235,11 +310,11 @@ export default function SalesTable({ data: result}: { data: GetRecordsResponse }
               return (
                 <button
                   key={page}
-                  onClick={() => setFilter("page", page)}
+                  onClick={() => setFilter('page', page)}
                   className={`w-7 h-7 text-xs font-medium rounded-md transition-colors ${
                     isActive
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   {page}
@@ -249,12 +324,21 @@ export default function SalesTable({ data: result}: { data: GetRecordsResponse }
           </div>
 
           <button
-              onClick={() => setFilter("page", Math.min(totalPages, result.page + 1))}
+            onClick={() =>
+              setFilter('page', Math.min(totalPages, result.page + 1))
+            }
             disabled={result.page >= totalPages}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>

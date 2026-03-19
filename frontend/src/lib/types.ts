@@ -1,19 +1,19 @@
 export type SummaryMetric =
-  | "nmv"
-  | "units_sold"
-  | "avg_price"
-  | "unique_products"
-  | "unique_shops";
+  | 'nmv'
+  | 'units_sold'
+  | 'avg_price'
+  | 'unique_products'
+  | 'unique_shops';
 
 export type SummaryGroupBy =
-  | "platform"
-  | "region"
-  | "is_mall"
-  | "origin"
-  | "l1_category"
-  | "l2_category"
-  | "l3_category"
-  | "l4_category";
+  | 'platform'
+  | 'region'
+  | 'is_mall'
+  | 'origin'
+  | 'l1_category'
+  | 'l2_category'
+  | 'l3_category'
+  | 'l4_category';
 
 export interface SummaryBreakdownItem {
   group: string;
@@ -29,7 +29,7 @@ export interface SummaryResponse {
   };
 }
 
-export type TrendGroupBy = "platform" | "region";
+export type TrendGroupBy = 'platform' | 'region';
 
 export interface TrendDataPoint {
   period: string;
@@ -76,7 +76,7 @@ export interface PaginatedResponse<T> {
 
 export type GetRecordsResponse = PaginatedResponse<SalesRecord>;
 
-export type IsMall = "true" | "false" | "other";
+export type IsMall = 'true' | 'false' | 'other';
 
 export interface FilterParams {
   platform?: string;
@@ -90,3 +90,6 @@ export interface FilterParams {
   origin?: string;
   is_mall?: IsMall;
 }
+
+export type Origin = 'Imported' | 'Local' | 'Other';
+export type MallStatus = 'Mall' | 'Non-Mall' | 'Other';
