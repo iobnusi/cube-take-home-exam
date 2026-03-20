@@ -35,6 +35,14 @@ This starts the services in sequence:
 4. `backend` starts on port `4000`.
 5. `frontend` starts on port `3000`.
 
+Once the seeding process ss complete and the console displays:
+
+```bash
+seeder-1        |  Seeding complete
+```
+
+The application can be accessed in the browser via `http://localhost:3000`
+
 App URLs:
 
 -   Frontend: `http://localhost:3000`
