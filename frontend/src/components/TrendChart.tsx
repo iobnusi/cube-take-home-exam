@@ -78,7 +78,7 @@ function buildChartData(
 export default function TrendChart({ data }: { data: TrendResponse }) {
   const { filters, setFilter } = useFilters();
   const [groupByState, setGroupByState] = useState<TrendGroupBy>(
-    filters.groupBy ?? 'none',
+    filters.groupBy ?? 'platform',
   );
 
   const chartsByMetric = useMemo(() => {

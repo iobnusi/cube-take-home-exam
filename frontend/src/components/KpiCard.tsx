@@ -1,6 +1,6 @@
 'use client';
 
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Cell, Pie, PieChart, Tooltip } from 'recharts';
 import type { SummaryGroupBy } from '@/lib/types';
 
 const PIE_COLORS = [
@@ -173,46 +173,44 @@ export default function KpiCard({
         <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="h-24 w-24 shrink-0">
-              <ResponsiveContainer width="100%" height="100%" debounce={120}>
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    dataKey="value"
-                    nameKey="label"
-                    innerRadius={24}
-                    outerRadius={42}
-                    paddingAngle={2}
-                    stroke="none"
-                    isAnimationActive
-                    animationBegin={0}
-                    animationDuration={450}
-                    animationEasing="ease-out"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={entry.label}
-                        fill={PIE_COLORS[index % PIE_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    isAnimationActive={false}
-                    formatter={(pieValue, name) => [
-                      Number(pieValue ?? 0).toLocaleString(),
-                      String(name ?? ''),
-                    ]}
-                    contentStyle={{
-                      backgroundColor: '#0f172a',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                      color: '#f8fafc',
-                    }}
-                    labelStyle={{ display: 'none' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <PieChart width={96} height={96}>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="label"
+                  innerRadius={24}
+                  outerRadius={42}
+                  paddingAngle={2}
+                  stroke="none"
+                  isAnimationActive
+                  animationBegin={0}
+                  animationDuration={450}
+                  animationEasing="ease-out"
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={entry.label}
+                      fill={PIE_COLORS[index % PIE_COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  isAnimationActive={false}
+                  formatter={(pieValue, name) => [
+                    Number(pieValue ?? 0).toLocaleString(),
+                    String(name ?? ''),
+                  ]}
+                  contentStyle={{
+                    backgroundColor: '#0f172a',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    color: '#f8fafc',
+                  }}
+                  labelStyle={{ display: 'none' }}
+                />
+              </PieChart>
             </div>
 
             <div className="grid w-full gap-2">

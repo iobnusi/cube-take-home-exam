@@ -47,19 +47,6 @@ function KpiSkeleton() {
   );
 }
 
-function buildParamsKey(
-  params: Record<string, string | undefined>,
-  predicate: (key: string) => boolean,
-) {
-  return JSON.stringify(
-    Object.fromEntries(
-      Object.entries(params)
-        .filter(([key, value]) => predicate(key) && value !== undefined)
-        .sort(([left], [right]) => left.localeCompare(right)),
-    ),
-  );
-}
-
 function pickParams(
   params: Record<string, string | undefined>,
   predicate: (key: string) => boolean,
