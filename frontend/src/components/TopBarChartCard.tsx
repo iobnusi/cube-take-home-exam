@@ -19,8 +19,11 @@ interface TopBarChartCardProps {
 }
 
 function formatCompactValue(value: number, valueFormat: 'number' | 'currency') {
-  const prefix = valueFormat === 'currency' ? '$' : '';
+  const prefix = valueFormat === 'currency' ? '฿' : '';
 
+  if (value >= 1_000_000_000) {
+    return `${prefix}${(value / 1_000_000_000).toFixed(1)}B`;
+  }
   if (value >= 1_000_000) {
     return `${prefix}${(value / 1_000_000).toFixed(1)}M`;
   }

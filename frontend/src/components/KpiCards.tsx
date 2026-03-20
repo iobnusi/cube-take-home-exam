@@ -170,38 +170,23 @@ export default function KpiCards({
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <Suspense
-        key={`kpi-nmv-${buildCardKey(params, 'kpi_nmv_group_by')}`}
-        fallback={<KpiCardSkeleton />}
-      >
+      <Suspense fallback={<KpiCardSkeleton />}>
         <TotalNmvKpiCard params={params} />
       </Suspense>
 
-      <Suspense
-        key={`kpi-units-sold-${buildCardKey(params, 'kpi_units_sold_group_by')}`}
-        fallback={<KpiCardSkeleton />}
-      >
+      <Suspense fallback={<KpiCardSkeleton />}>
         <UnitsSoldKpiCard params={params} />
       </Suspense>
 
-      <Suspense
-        key={`kpi-active-shops-${buildCardKey(params, 'kpi_unique_shops_group_by')}`}
-        fallback={<KpiCardSkeleton />}
-      >
+      <Suspense fallback={<KpiCardSkeleton />}>
         <ActiveShopsKpiCard params={params} />
       </Suspense>
 
-      <Suspense
-        key={`kpi-unique-products-${buildCardKey(params, 'kpi_unique_products_group_by')}`}
-        fallback={<KpiCardSkeleton />}
-      >
+      <Suspense fallback={<KpiCardSkeleton />}>
         <UniqueProductsKpiCard params={params} />
       </Suspense>
 
-      <Suspense
-        key={`kpi-avg-price-${buildCardKey(params, 'kpi_avg_price_platform')}`}
-        fallback={<KpiCardSkeleton hasChart={false} />}
-      >
+      <Suspense fallback={<KpiCardSkeleton hasChart={false} />}>
         <AvgPriceKpiCard params={params} />
       </Suspense>
     </div>

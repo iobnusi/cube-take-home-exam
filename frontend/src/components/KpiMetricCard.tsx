@@ -24,11 +24,15 @@ const KPI_CONFIG = {
   nmv: {
     label: 'Total NMV',
     format: (value: number) =>
-      value >= 1_000_000
-        ? `$${(value / 1_000_000).toFixed(1)}M`
-        : value >= 1_000
-          ? `$${(value / 1_000).toFixed(1)}K`
-          : `$${value.toFixed(0)}`,
+      value >= 1_000_000_000_000
+        ? `฿${(value / 1_000_000_000_000).toFixed(1)}T`
+        : value >= 1_000_000_000
+          ? `฿${(value / 1_000_000_000).toFixed(1)}B`
+          : value >= 1_000_000
+            ? ` ฿${(value / 1_000_000).toFixed(1)}M`
+            : value >= 1_000
+              ? `$${(value / 1_000).toFixed(1)}K`
+              : `$${value.toFixed(0)}`,
     icon: (
       <svg
         width="16"
@@ -114,7 +118,7 @@ const KPI_CONFIG = {
   },
   avg_price: {
     label: 'Avg Price / Unit',
-    format: (value: number) => `$${value.toFixed(2)}`,
+    format: (value: number) => `฿${value.toFixed(2)}`,
     icon: (
       <svg
         width="16"
@@ -235,16 +239,16 @@ export default function KpiMetricCard({
       breakdownLabel={summary.breakdown?.group_by}
       chartData={chartData}
       groupBy={selectedGroupBy}
-      groupByOptions={
-        groupByQueryKey ? SELECTABLE_GROUP_BY_OPTIONS : undefined
-      }
+      groupByOptions={groupByQueryKey ? SELECTABLE_GROUP_BY_OPTIONS : undefined}
       onGroupByChange={
         groupByQueryKey
           ? (groupBy) => setFilter(groupByQueryKey, groupBy)
           : undefined
       }
       selectorValue={
-        isAvgPriceCard ? avgPricePlatform ?? AVG_PRICE_SELECTOR_ALL : undefined
+        isAvgPriceCard
+          ? (avgPricePlatform ?? AVG_PRICE_SELECTOR_ALL)
+          : undefined
       }
       selectorOptions={isAvgPriceCard ? avgPriceSelectorOptions : undefined}
       selectorAriaLabel={

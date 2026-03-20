@@ -102,7 +102,7 @@ const ALL_COLUMNS = [
       const v = Number(i.getValue());
       return (
         <span className="tabular-nums font-medium text-slate-800">
-          ${v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toFixed(2)}
+          ฿{v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toFixed(2)}
         </span>
       );
     },
@@ -121,7 +121,7 @@ const ALL_COLUMNS = [
     header: 'Avg Price',
     cell: (i) => (
       <span className="tabular-nums text-slate-700">
-        ${Number(i.getValue()).toFixed(2)}
+        ฿{Number(i.getValue()).toFixed(2)}
       </span>
     ),
     enableSorting: true,
@@ -181,8 +181,7 @@ export default function SalesTable({
     columns: ALL_COLUMNS,
     state: { sorting },
     onSortingChange: (updater) => {
-      const next =
-        typeof updater === 'function' ? updater(sorting) : updater;
+      const next = typeof updater === 'function' ? updater(sorting) : updater;
       if (next.length > 0) {
         setFilters({
           sort_by: next[0].id,
