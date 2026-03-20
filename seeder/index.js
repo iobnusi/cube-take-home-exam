@@ -11,6 +11,9 @@ try {
     await client.connect();
     console.log("\n Connected to database\n");
 
+    await client.query("TRUNCATE TABLE sales");
+    console.log("Cleared existing data");
+
     const files = await fs.readdir("data");
     console.log(`Found ${files.length} file(s) to process\n`);
 
