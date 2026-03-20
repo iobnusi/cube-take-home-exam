@@ -158,13 +158,13 @@ Used Claude Opus 4.6 for System Design planning and researching architecture dec
 -   Researching database and migration CLI tools (pg, golang-migrate)
 -   Researching appropriate backend tech stacks given the exam requirements (Express.js, tsoa, to use ORM's or not)
 
-Used Claude Sonnet 4.6 via Cursor for setting up the backend structure and the creation of vital front-end components such as:
+Used Claude Sonnet 4.6 via Cursor for setting up the backend structure, document generation, and the creation of vital front-end components such as:
 
 -   Setup Express.js backend structure with Open API docs setup via tsoa
 -   Setup Next.js application structure
 -   Bar charts and Pie Charts used in the records and trends pages using the recharts.js library
 -   Sales table UI using Tan stack Table for table data management
--   KPI cards
+-   KPI cards used in the main page using basic HTML with TailwindCSS
 
 Used Anthopics Claude skill "frontend-design" to give context to Claude Sonnet 4.6 to generate clean frontend UI
 https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md
