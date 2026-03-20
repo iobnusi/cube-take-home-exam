@@ -131,4 +131,6 @@ export interface Filters extends FilterParams {
   top_l4_category?: string;
   top_origin?: string;
   top_is_mall?: IsMall;
+  top_products_rank_by?: TopProductsRankBy;
+  top_shops_rank_by?: TopShopsRankBy;
 }

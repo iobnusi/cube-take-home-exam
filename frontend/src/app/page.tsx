@@ -22,6 +22,8 @@ const TOP_PARAM_KEYS = [
   'top_l4_category',
   'top_origin',
   'top_is_mall',
+  'top_products_rank_by',
+  'top_shops_rank_by',
 ] as const;
 
 function KpiSkeleton() {
@@ -78,15 +80,24 @@ async function TopChartsContent({
   params: Record<string, string | undefined>;
 }) {
   const filters = filtersFromParams(params, 'top_');
+  const topProductsRankBy =
+    params.top_products_rank_by === 'units_sold' ? 'units_sold' : 'nmv';
+  const topShopsRankBy =
+    params.top_shops_rank_by === 'units_sold' ||
+    params.top_shops_rank_by === 'product_count'
+      ? params.top_shops_rank_by
+      : 'nmv';
   const [topProducts, topShops] = await Promise.all([
-    fetchTopProducts(filters, 'nmv'),
-    fetchTopShops(filters, 'nmv'),
+    fetchTopProducts(filters, topProductsRankBy),
+    fetchTopShops(filters, topShopsRankBy),
   ]);
 
   return (
     <TopChartsPanel
       topProducts={topProducts.products}
       topShops={topShops.shops}
+      topProductsRankBy={topProductsRankBy}
+      topShopsRankBy={topShopsRankBy}
     />
   );
 }

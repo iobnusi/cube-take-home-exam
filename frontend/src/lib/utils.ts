@@ -64,6 +64,12 @@ export function filtersFromParamsClient(
     top_l4_category: params.get('top_l4_category') ?? undefined,
     top_origin: params.get('top_origin') ?? undefined,
     top_is_mall: (params.get('top_is_mall') as IsMall) ?? undefined,
+    top_products_rank_by:
+      (params.get('top_products_rank_by') as Filters['top_products_rank_by']) ??
+      undefined,
+    top_shops_rank_by:
+      (params.get('top_shops_rank_by') as Filters['top_shops_rank_by']) ??
+      undefined,
   };
 }
 

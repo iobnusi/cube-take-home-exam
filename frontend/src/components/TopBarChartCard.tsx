@@ -1,5 +1,7 @@
 'use client';
 
+import { useFilters } from '@/lib/useFilters';
+import type { Filters, TopDataPoint } from '@/lib/types';
 import {
   Bar,
   BarChart,
@@ -9,13 +11,21 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { TopDataPoint } from '@/lib/types';
 
 interface TopBarChartCardProps {
   title: string;
   subtitle: string;
   data: TopDataPoint[];
   valueFormat?: 'number' | 'currency';
+  rankBy: string;
+  rankByQueryKey: keyof Pick<
+    Filters,
+    'top_products_rank_by' | 'top_shops_rank_by'
+  >;
+  rankByOptions: Array<{
+    label: string;
+    value: string;
+  }>;
 }
 
 function formatCompactValue(value: number, valueFormat: 'number' | 'currency') {
@@ -40,14 +50,47 @@ export default function TopBarChartCard({
   subtitle,
   data,
   valueFormat = 'number',
+  rankBy,
+  rankByQueryKey,
+  rankByOptions,
 }: TopBarChartCardProps) {
   const chartData = data;
+  const { setFilter } = useFilters();
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-        <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+        </div>
+        <label className="relative shrink-0">
+          <span className="sr-only">Rank {title} by</span>
+          <select
+            value={rankBy}
+            onChange={(event) => setFilter(rankByQueryKey, event.target.value)}
+            className="appearance-none rounded-full border border-slate-200 bg-slate-50 py-1 pl-3 pr-8 text-[11px] font-medium text-slate-600 outline-none transition-colors focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          >
+            {rankByOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <svg
+            className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
+            <path
+              d="M6 8l4 4 4-4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </label>
       </div>
 
       <ResponsiveContainer width="100%" height={320}>
