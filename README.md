@@ -148,15 +148,26 @@ In short, the app keeps data loading close to the route and interactivity close 
 
 ## AI Usage Notes
 
-AI was used as an implementation aid, not as an unreviewed source of truth.
+Cursor IDE was used for the development of this application.
+Using Claude Opus 4.6 as a research tool/planner and Claude Sonnet 4.6 as a code template builder
 
-Typical uses:
+Used Claude Opus 4.6 for System Design planning and researching architecture decisions such as:
 
--   drafting or refining documentation
--   speeding up repetitive UI and API wiring
--   helping reason through query and component structure
+-   Researching appropriate seeder libraries
+-   Researching Dockerfile and docker compose best practices
+-   Researching database and migration CLI tools (pg, golang-migrate)
+-   Researching appropriate backend tech stacks given the exam requirements (Express.js, tsoa, to use ORM's or not)
 
-All generated code and docs were reviewed against the repository itself, and behavior-specific descriptions in this README are based on the checked-in code.
+Used Claude Sonnet 4.6 via Cursor for setting up the backend structure and the creation of vital front-end components such as:
+
+-   Setup Express.js backend structure with Open API docs setup via tsoa
+-   Setup Next.js application structure
+-   Bar charts and Pie Charts used in the records and trends pages using the recharts.js library
+-   Sales table UI using Tan stack Table for table data management
+-   KPI cards
+
+Used Anthopics Claude skill "frontend-design" to give context to Claude Sonnet 4.6 to generate clean frontend UI
+https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md
 
 ## What I Would Improve With More Time
 
