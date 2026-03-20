@@ -2,11 +2,22 @@ import { Suspense } from 'react';
 import FilterBar from '@/components/FilterBar';
 import FilterBarSkeleton from '@/components/FilterBarSkeleton';
 import KpiCards from '@/components/KpiCards';
+import TopBarChartCard from '@/components/TopBarChartCard';
+import { fetchTopProducts, fetchTopShops } from '@/lib/api';
 import {
   fetchL1Categories,
   fetchPlatforms,
   fetchRegions,
 } from '@/lib/api/filters';
+import { filtersFromParams } from '@/lib/utils';
+
+const KPI_PARAM_KEYS = [
+  'kpi_nmv_group_by',
+  'kpi_units_sold_group_by',
+  'kpi_unique_shops_group_by',
+  'kpi_unique_products_group_by',
+  'kpi_avg_price_platform',
+] as const;
 
 function KpiSkeleton() {
   return (
@@ -31,26 +42,35 @@ function KpiSkeleton() {
   );
 }
 
-function ChartPlaceholder({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function TopChartsSkeleton() {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
+    <div className="grid grid-cols-1 gap-4">
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm animate-pulse"
+        >
+          <div className="space-y-2">
+            <div className="h-4 w-28 rounded bg-slate-100" />
+            <div className="h-3 w-48 rounded bg-slate-100" />
+          </div>
+          <div className="mt-5 h-72 rounded-xl bg-slate-100" />
         </div>
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-500">
-          Coming soon
-        </div>
-      </div>
-      <div className="mt-5 h-56 rounded-xl bg-slate-50 ring-1 ring-slate-200/70" />
+      ))}
     </div>
+  );
+}
+
+function buildParamsKey(
+  params: Record<string, string | undefined>,
+  predicate: (key: string) => boolean,
+) {
+  return JSON.stringify(
+    Object.fromEntries(
+      Object.entries(params)
+        .filter(([key, value]) => predicate(key) && value !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right)),
+    ),
   );
 }
 
@@ -67,12 +87,53 @@ async function TopChartsFilterBarContent() {
         platforms={platforms}
         regions={regions}
         l1Categories={l1Categories}
+        disable={{
+          dateRange: true,
+        }}
       />
     </div>
   );
 }
 
-function PageContent() {
+async function TopChartsContent({
+  params,
+}: {
+  params: Record<string, string | undefined>;
+}) {
+  const filters = filtersFromParams(params);
+  const [topProducts, topShops] = await Promise.all([
+    fetchTopProducts(filters, 'nmv'),
+    fetchTopShops(filters, 'nmv'),
+  ]);
+
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      <TopBarChartCard
+        title="Top 10 Products"
+        subtitle="Highest product IDs ranked by NMV for the current filter set."
+        data={topProducts.products}
+        valueFormat="currency"
+      />
+      <TopBarChartCard
+        title="Top 10 Shops"
+        subtitle="Highest shop IDs ranked by NMV for the current filter set."
+        data={topShops.shops}
+        valueFormat="currency"
+      />
+    </div>
+  );
+}
+
+function PageContent({
+  params,
+}: {
+  params: Record<string, string | undefined>;
+}) {
+  const topChartsKey = buildParamsKey(
+    params,
+    (key) => !KPI_PARAM_KEYS.includes(key as (typeof KPI_PARAM_KEYS)[number]),
+  );
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -92,11 +153,9 @@ function PageContent() {
               Four KPI cards now support region/platform pie breakdowns.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Suspense fallback={<KpiSkeleton />}>
-              <KpiCards />
-            </Suspense>
-          </div>
+          <Suspense fallback={<KpiSkeleton />}>
+            <KpiCards params={params} />
+          </Suspense>
         </section>
 
         <section>
@@ -105,7 +164,7 @@ function PageContent() {
               Top Charts
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Filter and compare the upcoming top products and top shops views.
+              Top 10 products and shops for the current dashboard filters.
             </p>
           </div>
 
@@ -114,16 +173,12 @@ function PageContent() {
               <TopChartsFilterBarContent />
             </Suspense>
 
-            <div className="grid grid-cols-1 gap-4">
-              <ChartPlaceholder
-                title="Top Products"
-                description="Reserved chart space for the upcoming top products bar chart."
-              />
-              <ChartPlaceholder
-                title="Top Shops"
-                description="Reserved chart space for the upcoming top shops bar chart."
-              />
-            </div>
+            <Suspense
+              key={`top-charts-${topChartsKey}`}
+              fallback={<TopChartsSkeleton />}
+            >
+              <TopChartsContent params={params} />
+            </Suspense>
           </div>
         </section>
       </div>
@@ -131,10 +186,16 @@ function PageContent() {
   );
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const params = await searchParams;
+
   return (
     <Suspense>
-      <PageContent />
+      <PageContent params={params} />
     </Suspense>
   );
 }

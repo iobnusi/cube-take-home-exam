@@ -49,17 +49,17 @@ export class TopService {
             params.filters
         );
 
-        let aggregate = "";
+        let aggregate = ",";
 
         switch (params.rank_by) {
             case "nmv":
-                aggregate = "SUM(nmv)";
+                aggregate += "SUM(nmv)";
                 break;
             case "units_sold":
-                aggregate = "SUM(units_sold)";
+                aggregate += "SUM(units_sold)";
                 break;
             case "product_count":
-                aggregate = "COUNT(DISTINCT product_id)";
+                aggregate += "COUNT(DISTINCT product_id)";
                 break;
         }
 

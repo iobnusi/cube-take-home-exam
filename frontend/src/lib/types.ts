@@ -46,6 +46,22 @@ export interface TrendResponse {
   data: Record<string, TrendDataPoint[]>;
 }
 
+export interface TopDataPoint {
+  id: string;
+  value: number;
+}
+
+export type TopProductsRankBy = 'nmv' | 'units_sold';
+export type TopShopsRankBy = 'nmv' | 'units_sold' | 'product_count';
+
+export interface TopProductsResponse {
+  products: TopDataPoint[];
+}
+
+export interface TopShopsResponse {
+  shops: TopDataPoint[];
+}
+
 export interface SalesRecord {
   id: number;
   created_at: string;
