@@ -1,6 +1,7 @@
 import type {
     FilterParams,
     GetRecordsResponse,
+    SummaryGroupBy,
     SummaryMetric,
     SummaryResponse,
     TrendGroupBy,
@@ -11,7 +12,8 @@ import { buildQuery } from "./utils";
 
 export async function fetchSummaryMetric(
     metric: SummaryMetric,
-    filters: FilterParams
+    filters: FilterParams,
+    groupBy?: SummaryGroupBy
 ): Promise<SummaryResponse> {
     const endpointMap: Record<SummaryMetric, string> = {
         nmv: "nmv",
@@ -29,6 +31,7 @@ export async function fetchSummaryMetric(
         l4_category: filters.l4_category,
         origin: filters.origin,
         is_mall: filters.is_mall,
+        group_by: groupBy,
     });
     const res = await fetch(`${BASE_URL}/summary/${endpointMap[metric]}${qs}`, {
         cache: "no-store",

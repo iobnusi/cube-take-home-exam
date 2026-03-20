@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFilters } from "@/lib/useFilters";
-import { fetchAllSummaries } from "@/lib/api";
-import type { SummaryResponse } from "@/lib/types";
+import { fetchSummaryMetric } from "@/lib/api";
+import { fetchPlatforms } from "@/lib/api/filters";
+import type {
+  SummaryBreakdownItem,
+  SummaryGroupBy,
+  SummaryMetric,
+  SummaryResponse,
+} from "@/lib/types";
 import KpiCard from "./KpiCard";
 
 const KPI_CONFIG = [
@@ -14,8 +20,8 @@ const KPI_CONFIG = [
       v >= 1_000_000
         ? `$${(v / 1_000_000).toFixed(1)}M`
         : v >= 1_000
-        ? `$${(v / 1_000).toFixed(1)}K`
-        : `$${v.toFixed(0)}`,
+          ? `$${(v / 1_000).toFixed(1)}K`
+          : `$${v.toFixed(0)}`,
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="1" x2="12" y2="23" />
@@ -31,8 +37,8 @@ const KPI_CONFIG = [
       v >= 1_000_000
         ? `${(v / 1_000_000).toFixed(1)}M`
         : v >= 1_000
-        ? `${(v / 1_000).toFixed(1)}K`
-        : `${v.toLocaleString()}`,
+          ? `${(v / 1_000).toFixed(1)}K`
+          : `${v.toLocaleString()}`,
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
@@ -80,39 +86,145 @@ const KPI_CONFIG = [
   },
 ];
 
-const METRIC_ORDER: Array<typeof KPI_CONFIG[number]["metric"]> = [
+const METRIC_ORDER: Array<(typeof KPI_CONFIG)[number]["metric"]> = [
   "nmv",
   "units_sold",
-  "avg_price",
   "unique_shops",
   "unique_products",
+  "avg_price",
 ];
+
+const SELECTABLE_GROUP_BY_OPTIONS: SummaryGroupBy[] = ["platform", "region"];
+const CHART_METRICS: SummaryMetric[] = ["nmv", "units_sold", "unique_shops", "unique_products"];
+const AVG_PRICE_SELECTOR_ALL = "__all_platforms__";
+
+interface SummaryState {
+  requestKey: string;
+  data: SummaryResponse[] | null;
+  error: string | null;
+}
+
+type ChartGroupByState = Record<SummaryMetric, SummaryGroupBy>;
+
+function buildChartData(items?: SummaryBreakdownItem[]) {
+  if (!items?.length) {
+    return undefined;
+  }
+
+  const rankedItems = items.filter((item) => item.value > 0);
+  const topItems = rankedItems.slice(0, 4).map((item) => ({
+    label: item.group || "Unknown",
+    value: item.value,
+  }));
+  const otherValue = rankedItems
+    .slice(4)
+    .reduce((sum, item) => sum + item.value, 0);
+
+  if (otherValue > 0) {
+    topItems.push({ label: "Others", value: otherValue });
+  }
+
+  return topItems.length ? topItems : undefined;
+}
 
 export default function KpiCards() {
   const { filters } = useFilters();
-  const [data, setData] = useState<SummaryResponse[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [chartGroupBy, setChartGroupBy] = useState<ChartGroupByState>({
+    nmv: "platform",
+    units_sold: "platform",
+    avg_price: "platform",
+    unique_products: "platform",
+    unique_shops: "platform",
+  });
+  const [platformOptions, setPlatformOptions] = useState<string[]>([]);
+  const [avgPricePlatform, setAvgPricePlatform] = useState<string>(AVG_PRICE_SELECTOR_ALL);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    fetchAllSummaries(filters)
-      .then(setData)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
-      .finally(() => setLoading(false));
-  }, [
-    filters.platform,
-    filters.region,
-    filters.from,
-    filters.to,
-    filters.l1_category,
-    filters.l2_category,
-    filters.l3_category,
-    filters.l4_category,
-    filters.origin,
-    filters.is_mall,
-  ]);
+    let cancelled = false;
+
+    fetchPlatforms()
+      .then((platforms) => {
+        if (!cancelled) {
+          setPlatformOptions(platforms);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPlatformOptions([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const requestKey = JSON.stringify({ filters, chartGroupBy, avgPricePlatform });
+  const [state, setState] = useState<SummaryState>({
+    requestKey,
+    data: null,
+    error: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all(
+      METRIC_ORDER.map((metric) => {
+        if (metric === "avg_price") {
+          return fetchSummaryMetric(metric, {
+            ...filters,
+            platform:
+              avgPricePlatform === AVG_PRICE_SELECTOR_ALL
+                ? filters.platform
+                : avgPricePlatform,
+          });
+        }
+
+        return CHART_METRICS.includes(metric)
+          ? fetchSummaryMetric(metric, filters, chartGroupBy[metric])
+          : fetchSummaryMetric(metric, filters);
+      })
+    )
+      .then((data) => {
+        if (!cancelled) {
+          setState({
+            requestKey,
+            data,
+            error: null,
+          });
+        }
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setState({
+            requestKey,
+            data: null,
+            error: e instanceof Error ? e.message : "Failed to load",
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [avgPricePlatform, chartGroupBy, filters, requestKey]);
+
+  const avgPriceSelectorOptions = useMemo(
+    () => [
+      { label: "All Platforms", value: AVG_PRICE_SELECTOR_ALL },
+      ...platformOptions.map((platform) => ({
+        label: platform,
+        value: platform,
+      })),
+    ],
+    [platformOptions]
+  );
+
+  const isCurrentRequest = state.requestKey === requestKey;
+  const data = isCurrentRequest ? state.data : null;
+  const error = isCurrentRequest ? state.error : null;
+  const loading = !isCurrentRequest || (!data && !error);
 
   if (error) {
     return (
@@ -129,6 +241,10 @@ export default function KpiCards() {
         const config = KPI_CONFIG.find((c) => c.metric === metric)!;
         const summary = data?.find((d) => d.metric === metric);
         const value = loading ? "—" : summary ? config.format(summary.total) : "—";
+        const chartData = loading ? undefined : buildChartData(summary?.breakdown?.items);
+        const hasSelectableChart = CHART_METRICS.includes(metric);
+        const isAvgPriceCard = metric === "avg_price";
+
         return (
           <KpiCard
             key={metric}
@@ -136,6 +252,20 @@ export default function KpiCards() {
             value={value}
             icon={config.icon}
             description={config.description}
+            breakdownLabel={summary?.breakdown?.group_by}
+            chartData={chartData}
+            groupBy={hasSelectableChart ? chartGroupBy[metric] : undefined}
+            groupByOptions={hasSelectableChart ? SELECTABLE_GROUP_BY_OPTIONS : undefined}
+            onGroupByChange={hasSelectableChart ? (groupBy) => {
+              setChartGroupBy((current) => ({
+                ...current,
+                [metric]: groupBy,
+              }));
+            } : undefined}
+            selectorValue={isAvgPriceCard ? avgPricePlatform : undefined}
+            selectorOptions={isAvgPriceCard ? avgPriceSelectorOptions : undefined}
+            selectorAriaLabel={isAvgPriceCard ? "Filter Avg Price by platform" : undefined}
+            onSelectorChange={isAvgPriceCard ? setAvgPricePlatform : undefined}
           />
         );
       })}
