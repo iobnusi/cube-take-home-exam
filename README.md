@@ -76,19 +76,17 @@ This schema keeps the backend simple and works well for the current scope, where
 
 ## Indexes Added And Why
 
-No explicit indexes beyond the primary key on `id` have been added yet.
+In addition to the primary key on `id`, two composite indexes have been added:
 
-That was an intentional tradeoff for this take-home scope:
+-   `idx_sales_platform_region_origin_is_mall` on `(platform, region, origin, is_mall)`
+-   `idx_sales_l1_l2_l3_l4` on `(l1_category, l2_category, l3_category, l4_category)`
 
--   the dataset is small enough to work without premature optimization
--   the query patterns were easier to validate first before committing to index strategy
+These indexes were chosen to match the app's most common filter patterns:
 
-With more time, I would likely add:
+-   the platform/region/origin/is_mall index supports common dashboard, summary, top, trend, and record queries where those dimensions are filtered together
+-   the category index supports the cascading L1-L4 category filters used throughout the UI and API
 
--   an index on `period` for date filtering and trend queries
--   a composite index on `(platform, region, period)` for common dashboard filters
--   indexes on `product_id` and `shop_id` to support top-list and record queries
--   possibly category-focused indexes depending on real query frequency
+This keeps the current schema optimized around the main analytical dimensions without adding unnecessary index overhead.
 
 ## API Overview
 
@@ -171,10 +169,31 @@ https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skil
 
 ## What I Would Improve With More Time
 
--   Add targeted database indexes after measuring real query plans.
--   Add tests for the seeder, backend services, and key frontend flows.
--   Add stronger error handling and clearer user-facing loading/error states.
--   Add idempotency or duplicate-protection to the seeder.
--   Expand filter capabilities, especially around date ranges and ranking controls.
+The data given provides periods that date truncated by month, if daily dates are provided, we can:
+
+-   Add composite index on `(platform, region, period)` if time-based filtering becomes the dominant access pattern
+-   Expand filter and grouping by date capabilities, especially around date ranges and ranking controls.
+-   Include time series/line graphs for more comprehensive trends page
+
+Improve the seeder by:
+
+-   Implementing more data cleaning logic such as duplicate-protection
+-   Add unit/integration test using Jest for quality assurance
+
+Improve the frontend by:
+
+-   Add stronger error handling and clearer user-facing loading/error states
+-   Use a component manage such as Storybook for better component development process
+-   Use an icon library such FontAwesome to replace hard coded SVGs in components
+-   Add unit tests for components and integration tests for pages using Jest for quality assurance
+
+Impove the backend by:
+
 -   Tighten typing further between backend DTOs and frontend consumers.
--   Add local development instructions outside Docker for faster iteration.
+-   Add unit test for API routes/services or integration tests by creating a mock PostgreSQL container
+-   Add search by product name or shop name if a reference to product and shop ids are given
+-   Add indexes on `product_id` and `shop_id` to support top-list and record queries
+
+Others:
+
+-   Add local development instructions outside Docker for faster iteration
