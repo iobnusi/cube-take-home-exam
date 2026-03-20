@@ -2,7 +2,7 @@ import express, { type Request, type Response } from "express";
 import cors from "cors";
 import { RegisterRoutes } from "./generated/routes";
 import swaggerUi from "swagger-ui-express";
-import swaggerDocument from "../public/swagger.json" assert { type: "json" };
+import swaggerDocument from "../public/swagger.json";
 
 const app = express();
 
@@ -19,6 +19,10 @@ RegisterRoutes(app);
 
 // For serving Open API docs
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.get("/health", (_req: Request, res: Response) => {
+    res.json({ status: "ok" });
+});
 
 app.use((_req: Request, res: Response) => {
     res.status(404).json({ message: "Not Found" });

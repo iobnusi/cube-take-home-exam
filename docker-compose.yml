@@ -46,5 +46,41 @@ services:
         volumes:
             - ./seeder/data/:/app/data
         command: ["node", "index.js"]
+
+    backend:
+        environment:
+            DATABASE_URL: postgres://app:secret@db:5432/marketplace?sslmode=disable
+            PORT: 4000
+        ports:
+            - 4000:4000
+        build:
+            context: backend
+            dockerfile: Dockerfile
+        depends_on:
+            db:
+                condition: service_healthy
+            migrate:
+                condition: service_completed_successfully
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "wget -qO- http://localhost:4000/health || exit 1",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+    frontend:
+        environment:
+            API_URL: http://backend:4000
+            NEXT_PUBLIC_API_URL: http://localhost:4000
+        ports:
+            - 3000:3000
+        build:
+            context: frontend
+            dockerfile: Dockerfile
+        depends_on:
+            backend:
+                condition: service_healthy
 volumes:
     pgdata:
