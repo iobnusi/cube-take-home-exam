@@ -29,7 +29,7 @@ export interface SummaryResponse {
   };
 }
 
-export type TrendGroupBy = 'platform' | 'region';
+export type TrendGroupBy = 'platform' | 'region' | 'none';
 
 export interface TrendDataPoint {
   period: string;

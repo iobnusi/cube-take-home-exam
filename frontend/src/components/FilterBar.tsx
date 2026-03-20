@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useFilters } from '@/lib/useFilters';
+import { useEffect, useMemo, useState } from 'react';
+import { Filters, useFilters } from '@/lib/useFilters';
 import type { IsMall } from '@/lib/types';
 import {
   fetchL2Categories,
@@ -28,12 +28,24 @@ export default function FilterBar({
   platforms,
   regions,
   l1Categories,
+  disable,
 }: {
-  platforms: string[];
-  regions: string[];
-  l1Categories: string[];
+  platforms?: string[];
+  regions?: string[];
+  l1Categories?: string[];
+  disable?: {
+    platform?: boolean;
+    region?: boolean;
+    origin?: boolean;
+    is_mall?: boolean;
+    category?: boolean;
+    dateRange?: boolean;
+  };
 }) {
-  const { filters, setFilter, setFilters } = useFilters();
+  const { filters, setFilters } = useFilters();
+
+  // set a temp state for filters
+  const [tempFilters, setTempFilters] = useState<Filters>(filters);
 
   const [l2Options, setL2Options] = useState<string[]>([]);
   const [l3Options, setL3Options] = useState<string[]>([]);
@@ -41,12 +53,12 @@ export default function FilterBar({
 
   // Fetch L2 when L1 changes
   useEffect(() => {
-    if (!filters.l1_category) {
+    if (!tempFilters.l1_category) {
       setL2Options([]);
       return;
     }
     const controller = new AbortController();
-    fetchL2Categories(filters.l1_category)
+    fetchL2Categories(tempFilters.l1_category)
       .then((opts) => {
         if (!controller.signal.aborted) setL2Options(opts);
       })
@@ -54,16 +66,16 @@ export default function FilterBar({
         if (!controller.signal.aborted) setL2Options([]);
       });
     return () => controller.abort();
-  }, [filters.l1_category]);
+  }, [tempFilters.l1_category]);
 
   // Fetch L3 when L1 or L2 changes
   useEffect(() => {
-    if (!filters.l1_category || !filters.l2_category) {
+    if (!tempFilters.l1_category || !tempFilters.l2_category) {
       setL3Options([]);
       return;
     }
     const controller = new AbortController();
-    fetchL3Categories(filters.l1_category, filters.l2_category)
+    fetchL3Categories(tempFilters.l1_category, tempFilters.l2_category)
       .then((opts) => {
         if (!controller.signal.aborted) setL3Options(opts);
       })
@@ -71,19 +83,23 @@ export default function FilterBar({
         if (!controller.signal.aborted) setL3Options([]);
       });
     return () => controller.abort();
-  }, [filters.l1_category, filters.l2_category]);
+  }, [tempFilters.l1_category, tempFilters.l2_category]);
 
   // Fetch L4 when L1, L2, or L3 changes
   useEffect(() => {
-    if (!filters.l1_category || !filters.l2_category || !filters.l3_category) {
+    if (
+      !tempFilters.l1_category ||
+      !tempFilters.l2_category ||
+      !tempFilters.l3_category
+    ) {
       setL4Options([]);
       return;
     }
     const controller = new AbortController();
     fetchL4Categories(
-      filters.l1_category,
-      filters.l2_category,
-      filters.l3_category,
+      tempFilters.l1_category,
+      tempFilters.l2_category,
+      tempFilters.l3_category,
     )
       .then((opts) => {
         if (!controller.signal.aborted) setL4Options(opts);
@@ -92,10 +108,29 @@ export default function FilterBar({
         if (!controller.signal.aborted) setL4Options([]);
       });
     return () => controller.abort();
-  }, [filters.l1_category, filters.l2_category, filters.l3_category]);
+  }, [
+    tempFilters.l1_category,
+    tempFilters.l2_category,
+    tempFilters.l3_category,
+  ]);
+
+  const handleSubmit = () => {
+    setFilters({
+      platform: tempFilters.platform,
+      region: tempFilters.region,
+      from: tempFilters.from,
+      to: tempFilters.to,
+      l1_category: tempFilters.l1_category,
+      l2_category: tempFilters.l2_category,
+      l3_category: tempFilters.l3_category,
+      l4_category: tempFilters.l4_category,
+      origin: tempFilters.origin,
+      is_mall: tempFilters.is_mall,
+    });
+  };
 
   const handleClear = () => {
-    setFilters({
+    const clearFilters = {
       platform: undefined,
       region: undefined,
       from: undefined,
@@ -104,48 +139,82 @@ export default function FilterBar({
       l2_category: undefined,
       l3_category: undefined,
       l4_category: undefined,
-      origin: undefined,
-      is_mall: undefined,
-    });
+    };
+    setFilters(clearFilters);
+    setTempFilters(clearFilters);
   };
 
-  const hasFilters = !!(
-    filters.platform ||
-    filters.region ||
-    filters.from ||
-    filters.to ||
-    filters.l1_category ||
-    filters.l2_category ||
-    filters.l3_category ||
-    filters.l4_category ||
-    filters.origin ||
-    filters.is_mall
+  const hasFilters = useMemo(
+    () =>
+      !!(
+        tempFilters.platform ||
+        tempFilters.region ||
+        tempFilters.from ||
+        tempFilters.to ||
+        tempFilters.l1_category ||
+        tempFilters.l2_category ||
+        tempFilters.l3_category ||
+        tempFilters.l4_category ||
+        tempFilters.origin ||
+        tempFilters.is_mall
+      ),
+    [tempFilters],
   );
 
-  const handleL1Change = (value: string) => {
-    setFilters({
-      l1_category: value || undefined,
-      l2_category: undefined,
-      l3_category: undefined,
-      l4_category: undefined,
-    });
+  const hasDirtyFilters = useMemo(
+    () =>
+      Object.keys(tempFilters)
+        .filter((key) => key !== 'groupBy')
+        .some(
+          (key) =>
+            tempFilters[key as keyof Filters] !== filters[key as keyof Filters],
+        ),
+    [tempFilters, filters],
+  );
+
+  const handleSelectL1Category = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const updatedFilters = {
+      ...tempFilters,
+      l1_category: e.target.value || undefined,
+    };
+
+    if (!e.target.value) {
+      updatedFilters.l2_category = undefined;
+      updatedFilters.l3_category = undefined;
+      updatedFilters.l4_category = undefined;
+    }
+
+    setTempFilters(updatedFilters);
   };
 
-  const handleL2Change = (value: string) => {
-    setFilters({
-      l2_category: value || undefined,
-      l3_category: undefined,
-      l4_category: undefined,
-    });
+  const handleSelectL2Category = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const updatedFilters = {
+      ...tempFilters,
+      l2_category: e.target.value || undefined,
+    };
+
+    if (!e.target.value) {
+      updatedFilters.l3_category = undefined;
+      updatedFilters.l4_category = undefined;
+    }
+
+    setTempFilters(updatedFilters);
   };
 
-  const handleL3Change = (value: string) => {
-    setFilters({
-      l3_category: value || undefined,
-      l4_category: undefined,
-    });
+  const handleSelectL3Category = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const updatedFilters = {
+      ...tempFilters,
+      l3_category: e.target.value || undefined,
+    };
+
+    if (!e.target.value) {
+      updatedFilters.l4_category = undefined;
+    }
+
+    setTempFilters(updatedFilters);
   };
 
+  // const handleSelectL2Category = (e: React.ChangeEvent<HTMLSelectElement>) => {
   return (
     <div className="px-6 py-3 bg-white border-b border-slate-200 space-y-2">
       {/* Row 1: Header and clear all button */}
@@ -167,7 +236,14 @@ export default function FilterBar({
             Filters
           </span>
         </div>
-
+        {hasDirtyFilters && (
+          <button
+            onClick={handleSubmit}
+            className="h-8 px-3 text-sm text-white bg-blue-500 hover:bg-blue-600 border border-dashed border-slate-300 rounded-lg hover:border-slate-400 transition-colors flex items-center gap-1.5"
+          >
+            Submit
+          </button>
+        )}
         {hasFilters && (
           <button
             onClick={handleClear}
@@ -194,158 +270,198 @@ export default function FilterBar({
         <span className="text-xs text-slate-400 font-bold w-18">
           Dimensions
         </span>
-        <select
-          value={filters.platform ?? ''}
-          onChange={(e) => setFilter('platform', e.target.value || undefined)}
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All Platforms</option>
-          {platforms.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={filters.region ?? ''}
-          onChange={(e) => setFilter('region', e.target.value || undefined)}
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All Regions</option>
-          {regions.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={filters.origin ?? ''}
-          onChange={(e) => setFilter('origin', e.target.value || undefined)}
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All Origins</option>
-          {ORIGINS.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={filters.is_mall ?? ''}
-          onChange={(e) =>
-            setFilter('is_mall', (e.target.value as IsMall) || undefined)
-          }
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All Mall Status</option>
-          {MALL_STATUS.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        {!disable?.platform && platforms && (
+          <select
+            value={tempFilters.platform ?? ''}
+            onChange={(e) =>
+              setTempFilters({
+                ...tempFilters,
+                platform: e.target.value || undefined,
+              })
+            }
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All Platforms</option>
+            {platforms.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        )}
+        {!disable?.region && regions && (
+          <select
+            value={tempFilters.region ?? ''}
+            onChange={(e) =>
+              setTempFilters({
+                ...tempFilters,
+                region: e.target.value || undefined,
+              })
+            }
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All Regions</option>
+            {regions.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        )}
+        {!disable?.origin && (
+          <select
+            value={tempFilters.origin ?? ''}
+            onChange={(e) =>
+              setTempFilters({
+                ...tempFilters,
+                origin: e.target.value || undefined,
+              })
+            }
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All Origins</option>
+            {ORIGINS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        )}
+        {!disable?.is_mall && (
+          <select
+            value={tempFilters.is_mall ?? ''}
+            onChange={(e) =>
+              setTempFilters({
+                ...tempFilters,
+                is_mall: (e.target.value as IsMall) || undefined,
+              })
+            }
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All Mall Status</option>
+            {MALL_STATUS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
       {/* Row 3: date range */}
-      <div className="ml-4 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-400 font-bold w-18">
-          Date Range
-        </span>
+      {!disable?.dateRange && (
+        <div className="ml-4 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-400 font-bold w-18">
+            Date Range
+          </span>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-slate-400">From</span>
-          <input
-            type="date"
-            value={filters.from ?? ''}
-            onChange={(e) => setFilter('from', e.target.value || undefined)}
-            className={INPUT_CLASS}
-          />
-        </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-400">From</span>
+            <input
+              type="date"
+              value={tempFilters.from ?? ''}
+              onChange={(e) =>
+                setTempFilters({
+                  ...tempFilters,
+                  from: e.target.value || undefined,
+                })
+              }
+              className={INPUT_CLASS}
+            />
+          </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-slate-400">To</span>
-          <input
-            type="date"
-            value={filters.to ?? ''}
-            onChange={(e) => setFilter('to', e.target.value || undefined)}
-            className={INPUT_CLASS}
-          />
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-400">To</span>
+            <input
+              type="date"
+              value={tempFilters.to ?? ''}
+              onChange={(e) =>
+                setTempFilters({
+                  ...tempFilters,
+                  to: e.target.value || undefined,
+                })
+              }
+              className={INPUT_CLASS}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Row 4: cascading category dropdowns */}
-      <div className="ml-4 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-400 font-bold w-18 mr-1">
-          Category
-        </span>
+      {!disable?.category && l1Categories && (
+        <div className="ml-4 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-400 font-bold w-18 mr-1">
+            Category
+          </span>
 
-        <select
-          value={filters.l1_category ?? ''}
-          onChange={(e) => handleL1Change(e.target.value)}
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All L1</option>
-          {l1Categories.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+          <select
+            value={tempFilters.l1_category ?? ''}
+            onChange={handleSelectL1Category}
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All L1</option>
+            {l1Categories.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
 
-        <select
-          value={filters.l2_category ?? ''}
-          onChange={(e) => handleL2Change(e.target.value)}
-          disabled={!filters.l1_category}
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All L2</option>
-          {l2Options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+          <select
+            value={tempFilters.l2_category ?? ''}
+            onChange={handleSelectL2Category}
+            disabled={!tempFilters.l1_category}
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All L2</option>
+            {l2Options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
 
-        <select
-          value={filters.l3_category ?? ''}
-          onChange={(e) => handleL3Change(e.target.value)}
-          disabled={!filters.l2_category}
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All L3</option>
-          {l3Options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+          <select
+            value={tempFilters.l3_category ?? ''}
+            onChange={handleSelectL3Category}
+            disabled={!tempFilters.l2_category}
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All L3</option>
+            {l3Options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
 
-        <select
-          value={filters.l4_category ?? ''}
-          onChange={(e) =>
-            setFilter('l4_category', e.target.value || undefined)
-          }
-          disabled={!filters.l3_category}
-          className={SELECT_CLASS}
-          style={CHEVRON_STYLE}
-        >
-          <option value="">All L4</option>
-          {l4Options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-      </div>
+          <select
+            value={tempFilters.l4_category ?? ''}
+            onChange={(e) =>
+              setTempFilters({
+                ...tempFilters,
+                l4_category: e.target.value || undefined,
+              })
+            }
+            disabled={!tempFilters.l3_category}
+            className={SELECT_CLASS}
+            style={CHEVRON_STYLE}
+          >
+            <option value="">All L4</option>
+            {l4Options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }
