@@ -101,7 +101,6 @@ This keeps the current schema optimized around the main analytical dimensions wi
 The backend exposes reporting-oriented REST endpoints:
 
 -   `GET /health`: container healthcheck
--   `GET /`: basic API and DB connectivity check
 -   `GET /records`: paginated raw sales records with filters and sorting
 -   `GET /summary/nmv`
 -   `GET /summary/units_sold`
@@ -119,6 +118,8 @@ The backend exposes reporting-oriented REST endpoints:
 -   `GET /filters/l4_categories`
 
 The route layer is implemented with `tsoa`, which generates Express route bindings and OpenAPI docs from typed controllers.
+
+Once the backend containers are running, the OpenAPI docs can be accessed through `http://localhost:4000/docs`
 
 ## Server Components Vs Client Components
 
