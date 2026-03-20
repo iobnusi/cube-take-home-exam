@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Filters, useFilters } from '@/lib/useFilters';
-import type { IsMall } from '@/lib/types';
+import { useFilters } from '@/lib/useFilters';
+import type { Filters, IsMall } from '@/lib/types';
 import {
   fetchL2Categories,
   fetchL3Categories,
@@ -24,11 +24,25 @@ const CHEVRON_STYLE = {
   backgroundPosition: 'right 8px center',
 };
 
+const SCOPED_FILTER_KEYS = [
+  'platform',
+  'region',
+  'from',
+  'to',
+  'l1_category',
+  'l2_category',
+  'l3_category',
+  'l4_category',
+  'origin',
+  'is_mall',
+] as const;
+
 export default function FilterBar({
   platforms,
   regions,
   l1Categories,
   disable,
+  scope = 'default',
 }: {
   platforms?: string[];
   regions?: string[];
@@ -41,11 +55,46 @@ export default function FilterBar({
     category?: boolean;
     dateRange?: boolean;
   };
+  scope?: 'default' | 'top';
 }) {
   const { filters, setFilters } = useFilters();
 
+  const scopedFilters = useMemo(
+    () =>
+      scope === 'top'
+        ? {
+            platform: filters.top_platform,
+            region: filters.top_region,
+            from: filters.top_from,
+            to: filters.top_to,
+            l1_category: filters.top_l1_category,
+            l2_category: filters.top_l2_category,
+            l3_category: filters.top_l3_category,
+            l4_category: filters.top_l4_category,
+            origin: filters.top_origin,
+            is_mall: filters.top_is_mall,
+          }
+        : {
+            platform: filters.platform,
+            region: filters.region,
+            from: filters.from,
+            to: filters.to,
+            l1_category: filters.l1_category,
+            l2_category: filters.l2_category,
+            l3_category: filters.l3_category,
+            l4_category: filters.l4_category,
+            origin: filters.origin,
+            is_mall: filters.is_mall,
+          },
+    [filters, scope],
+  );
+
   // set a temp state for filters
-  const [tempFilters, setTempFilters] = useState<Filters>(filters);
+  const [tempFilters, setTempFilters] = useState<Filters>(scopedFilters);
+
+  useEffect(() => {
+    setTempFilters(scopedFilters);
+  }, [scopedFilters]);
 
   const [l2Options, setL2Options] = useState<string[]>([]);
   const [l3Options, setL3Options] = useState<string[]>([]);
@@ -115,18 +164,33 @@ export default function FilterBar({
   ]);
 
   const handleSubmit = () => {
-    setFilters({
-      platform: tempFilters.platform,
-      region: tempFilters.region,
-      from: tempFilters.from,
-      to: tempFilters.to,
-      l1_category: tempFilters.l1_category,
-      l2_category: tempFilters.l2_category,
-      l3_category: tempFilters.l3_category,
-      l4_category: tempFilters.l4_category,
-      origin: tempFilters.origin,
-      is_mall: tempFilters.is_mall,
-    });
+    setFilters(
+      scope === 'top'
+        ? {
+            top_platform: tempFilters.platform,
+            top_region: tempFilters.region,
+            top_from: tempFilters.from,
+            top_to: tempFilters.to,
+            top_l1_category: tempFilters.l1_category,
+            top_l2_category: tempFilters.l2_category,
+            top_l3_category: tempFilters.l3_category,
+            top_l4_category: tempFilters.l4_category,
+            top_origin: tempFilters.origin,
+            top_is_mall: tempFilters.is_mall,
+          }
+        : {
+            platform: tempFilters.platform,
+            region: tempFilters.region,
+            from: tempFilters.from,
+            to: tempFilters.to,
+            l1_category: tempFilters.l1_category,
+            l2_category: tempFilters.l2_category,
+            l3_category: tempFilters.l3_category,
+            l4_category: tempFilters.l4_category,
+            origin: tempFilters.origin,
+            is_mall: tempFilters.is_mall,
+          },
+    );
   };
 
   const handleClear = () => {
@@ -139,8 +203,36 @@ export default function FilterBar({
       l2_category: undefined,
       l3_category: undefined,
       l4_category: undefined,
+      origin: undefined,
+      is_mall: undefined,
     };
-    setFilters(clearFilters);
+    setFilters(
+      scope === 'top'
+        ? {
+            top_platform: undefined,
+            top_region: undefined,
+            top_from: undefined,
+            top_to: undefined,
+            top_l1_category: undefined,
+            top_l2_category: undefined,
+            top_l3_category: undefined,
+            top_l4_category: undefined,
+            top_origin: undefined,
+            top_is_mall: undefined,
+          }
+        : {
+            platform: undefined,
+            region: undefined,
+            from: undefined,
+            to: undefined,
+            l1_category: undefined,
+            l2_category: undefined,
+            l3_category: undefined,
+            l4_category: undefined,
+            origin: undefined,
+            is_mall: undefined,
+          },
+    );
     setTempFilters(clearFilters);
   };
 
@@ -163,13 +255,10 @@ export default function FilterBar({
 
   const hasDirtyFilters = useMemo(
     () =>
-      Object.keys(tempFilters)
-        .filter((key) => key !== 'groupBy')
-        .some(
-          (key) =>
-            tempFilters[key as keyof Filters] !== filters[key as keyof Filters],
-        ),
-    [tempFilters, filters],
+      SCOPED_FILTER_KEYS.some(
+        (key) => tempFilters[key] !== scopedFilters[key],
+      ),
+    [tempFilters, scopedFilters],
   );
 
   const handleSelectL1Category = (e: React.ChangeEvent<HTMLSelectElement>) => {

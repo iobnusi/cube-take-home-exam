@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useFilters, type Filters } from '@/lib/useFilters';
+import { useFilters } from '@/lib/useFilters';
 import type {
+  Filters,
   SummaryBreakdownItem,
   SummaryGroupBy,
   SummaryMetric,

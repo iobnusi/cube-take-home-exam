@@ -1,38 +1,54 @@
-"use client";
+'use client';
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useEffect, useState, useTransition } from "react";
-import type { FilterParams, IsMall, SummaryGroupBy } from "./types";
-import type { TrendGroupBy } from "./types";
-
-export type SortDir = 'asc' | 'desc';
-
-export interface Filters extends FilterParams {
-  groupBy?: TrendGroupBy;
-  page?: number;
-  sort_by?: string;
-  sort_dir?: SortDir;
-  kpi_nmv_group_by?: SummaryGroupBy;
-  kpi_units_sold_group_by?: SummaryGroupBy;
-  kpi_unique_shops_group_by?: SummaryGroupBy;
-  kpi_unique_products_group_by?: SummaryGroupBy;
-  kpi_avg_price_platform?: string;
-}
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from 'react';
+import { filtersFromParamsClient } from './utils';
+import type { Filters } from './types';
 
 type FilterKey = keyof Filters;
 type PendingFiltersListener = (keys: FilterKey[]) => void;
+type PendingNavigationListener = (isPending: boolean) => void;
 
 let pendingFilterKeysStore: FilterKey[] = [];
+let pendingNavigationStore = false;
+let pendingSearchStore: string | null = null;
 const pendingFiltersListeners = new Set<PendingFiltersListener>();
+const pendingNavigationListeners = new Set<PendingNavigationListener>();
+
+function normalizeSearch(search: string) {
+  const params = new URLSearchParams(search);
+  return new URLSearchParams(
+    Array.from(params.entries()).sort(([leftKey], [rightKey]) =>
+      leftKey.localeCompare(rightKey),
+    ),
+  ).toString();
+}
 
 function setPendingFilterKeys(keys: FilterKey[]) {
   pendingFilterKeysStore = keys;
   pendingFiltersListeners.forEach((listener) => listener(keys));
 }
 
+function setPendingNavigation(isPending: boolean) {
+  pendingNavigationStore = isPending;
+  pendingNavigationListeners.forEach((listener) => listener(isPending));
+}
+
+function clearPendingNavigation() {
+  pendingSearchStore = null;
+  setPendingFilterKeys([]);
+  setPendingNavigation(false);
+}
+
 export function useFilters(): {
   filters: Filters;
-  setFilter: (key: keyof Filters, value: string | number | undefined) => void;
+  setFilter: (key: FilterKey, value: string | number | undefined) => void;
   setFilters: (updates: Partial<Filters>) => void;
   pendingFilterKeys: FilterKey[];
   isNavigating: boolean;
@@ -40,37 +56,17 @@ export function useFilters(): {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isNavigating, startTransition] = useTransition();
+  const currentSearch = normalizeSearch(searchParams.toString());
+  const [, startTransition] = useTransition();
   const [pendingFilterKeys, setPendingFilterKeysState] = useState<FilterKey[]>(
     pendingFilterKeysStore,
   );
+  const [isNavigating, setIsNavigating] = useState(pendingNavigationStore);
 
-  const filters: Filters = {
-    platform: searchParams.get("platform") ?? undefined,
-    region: searchParams.get("region") ?? undefined,
-    from: searchParams.get("from") ?? undefined,
-    to: searchParams.get("to") ?? undefined,
-    l1_category: searchParams.get("l1_category") ?? undefined,
-    l2_category: searchParams.get("l2_category") ?? undefined,
-    l3_category: searchParams.get("l3_category") ?? undefined,
-    l4_category: searchParams.get("l4_category") ?? undefined,
-    origin: searchParams.get("origin") ?? undefined,
-    is_mall: (searchParams.get("is_mall") as IsMall) ?? undefined,
-    groupBy: (searchParams.get("groupBy") as TrendGroupBy) ?? undefined,
-    page: searchParams.get("page") ? Number(searchParams.get("page")) : undefined,
-    sort_by: searchParams.get("sort_by") ?? undefined,
-    sort_dir: (searchParams.get("sort_dir") as SortDir) ?? undefined,
-    kpi_nmv_group_by:
-      (searchParams.get("kpi_nmv_group_by") as SummaryGroupBy) ?? undefined,
-    kpi_units_sold_group_by:
-      (searchParams.get("kpi_units_sold_group_by") as SummaryGroupBy) ?? undefined,
-    kpi_unique_shops_group_by:
-      (searchParams.get("kpi_unique_shops_group_by") as SummaryGroupBy) ?? undefined,
-    kpi_unique_products_group_by:
-      (searchParams.get("kpi_unique_products_group_by") as SummaryGroupBy) ?? undefined,
-    kpi_avg_price_platform:
-      searchParams.get("kpi_avg_price_platform") ?? undefined,
-  };
+  const filters: Filters = useMemo(
+    () => filtersFromParamsClient(searchParams),
+    [searchParams],
+  );
 
   useEffect(() => {
     const listener: PendingFiltersListener = (keys) => {
@@ -84,10 +80,25 @@ export function useFilters(): {
   }, []);
 
   useEffect(() => {
-    if (pendingFilterKeysStore.length > 0) {
-      setPendingFilterKeys([]);
+    const listener: PendingNavigationListener = (isPending) => {
+      setIsNavigating(isPending);
+    };
+
+    pendingNavigationListeners.add(listener);
+    return () => {
+      pendingNavigationListeners.delete(listener);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (pendingSearchStore === null) {
+      return;
     }
-  }, [searchParams]);
+
+    if (currentSearch === pendingSearchStore) {
+      clearPendingNavigation();
+    }
+  }, [currentSearch]);
 
   const setFilters = useCallback(
     (updates: Partial<Filters>) => {
@@ -95,31 +106,40 @@ export function useFilters(): {
       const updateKeys = Object.keys(updates) as FilterKey[];
 
       Object.entries(updates).forEach(([key, value]) => {
-        if (value === undefined || value === "" || value === null) {
+        if (value === undefined || value === '' || value === null) {
           current.delete(key);
         } else {
           current.set(key, String(value));
         }
       });
 
-      const isPageOnly = Object.keys(updates).length === 1 && "page" in updates;
+      const isPageOnly = Object.keys(updates).length === 1 && 'page' in updates;
       if (!isPageOnly) {
-        current.delete("page");
+        current.delete('page');
       }
 
+      const nextSearch = normalizeSearch(current.toString());
+
+      if (nextSearch === currentSearch) {
+        clearPendingNavigation();
+        return;
+      }
+
+      pendingSearchStore = nextSearch;
       setPendingFilterKeys(updateKeys);
+      setPendingNavigation(true);
       startTransition(() => {
-        router.push(`${pathname}?${current.toString()}`);
+        router.push(`${pathname}?${nextSearch}`);
       });
     },
-    [router, pathname, searchParams, startTransition]
+    [router, pathname, searchParams, currentSearch, startTransition],
   );
 
   const setFilter = useCallback(
     (key: keyof Filters, value: string | number | undefined) => {
       setFilters({ [key]: value });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return {

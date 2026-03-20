@@ -109,3 +109,26 @@ export interface FilterParams {
 
 export type Origin = 'Imported' | 'Local' | 'Other';
 export type MallStatus = 'Mall' | 'Non-Mall' | 'Other';
+
+export type SortDir = 'asc' | 'desc';
+export interface Filters extends FilterParams {
+  groupBy?: TrendGroupBy;
+  page?: number;
+  sort_by?: string;
+  sort_dir?: SortDir;
+  kpi_nmv_group_by?: SummaryGroupBy;
+  kpi_units_sold_group_by?: SummaryGroupBy;
+  kpi_unique_shops_group_by?: SummaryGroupBy;
+  kpi_unique_products_group_by?: SummaryGroupBy;
+  kpi_avg_price_platform?: string;
+  top_platform?: string;
+  top_region?: string;
+  top_from?: string;
+  top_to?: string;
+  top_l1_category?: string;
+  top_l2_category?: string;
+  top_l3_category?: string;
+  top_l4_category?: string;
+  top_origin?: string;
+  top_is_mall?: IsMall;
+}

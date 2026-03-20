@@ -38,7 +38,7 @@ export default function TopBarChartCard({
   data,
   valueFormat = 'number',
 }: TopBarChartCardProps) {
-  const chartData = [...data].reverse();
+  const chartData = data;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
